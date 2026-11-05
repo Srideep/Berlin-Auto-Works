@@ -6,7 +6,7 @@ Berlin AutoWorks is a fictional full-service auto repair shop in Berlin, New Jer
 
 The launch shop is a single location. Every transactional record carries a location id, so more shops can be added later without rewriting the data model.
 
-Application code is not in this repository yet. The full specification — sitemap, user flows, rendering strategy, stack, and non-functional requirements — is in [PLANNING.md](PLANNING.md).
+The app scaffold lives in this repository. The full specification — sitemap, user flows, rendering strategy, stack, and non-functional requirements — is in [PLANNING.md](PLANNING.md).
 
 ## Placeholder shop details
 
@@ -91,7 +91,24 @@ Multi-location UI, a fleet portal, SMS-first notifications, partial payments, fi
 | --- | --- |
 | [PLANNING.md](PLANNING.md) | Sitemap, flows, rendering, stack, and acceptance criteria |
 | [README.md](README.md) | This overview |
+| `src/app/` | Public site, `/account`, `/admin`, and auth routes |
+| `src/modules/` | In-process domain modules |
+| [prisma/schema.prisma](prisma/schema.prisma) | Location-aware data model stubs |
+
+## Run the app
+
+```bash
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). The public pages, customer portal, and staff workspace render without a database. Copy `.env.example` to `.env` and set `DATABASE_URL` before running Prisma migrations. Booking, estimates, and sign-in validate input and do not save it yet.
+
+```bash
+npm run typecheck
+npm run lint
+```
 
 ## Status
 
-This repository is the planning baseline. There is no application to install or run yet.
+The three surfaces and the Prisma model stubs are in place. Auth, payments, and persistence are not connected.
