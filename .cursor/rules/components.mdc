@@ -1,0 +1,17 @@
+---
+description: Component and UI conventions
+globs: "**/*.tsx"
+alwaysApply: false
+---
+
+# UI & Component Rules
+
+- Default to Server Components.
+- Use named exports for components (except page.tsx).
+- Extract props as interfaces.
+- Reuse existing primitives from `src/components/ui` before creating new ones.
+- Forms should be progressive disclosure (max 3–5 steps for booking/estimate).
+- Phone-first layouts for public and customer surfaces.
+- Admin optimized for desktop but usable on tablet.
+- Clear empty states and next actions on all list pages.
+- Accessibility: use semantic HTML and accessible primitives.
