@@ -1,0 +1,232 @@
+// Berlin AutoWorks schema stubs.
+// Transactional records carry locationId so another shop can be added later.
+// Launch still runs a single location; queries must not assume one shop id.
+// Card numbers and CVC are never columns. Invoices store a provider reference only.
+// internalNotes are staff-only and must not be selected for the customer portal.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum StaffRole {
+  service_advisor
+  technician
+  manager
+}
+
+enum AppointmentStatus {
+  requested
+  confirmed
+  cancelled
+  no_show
+  completed
+}
+
+enum EstimateStatus {
+  draft
+  sent
+  changes_requested
+  approved
+  declined
+  expired
+}
+
+enum RepairOrderStatus {
+  intake
+  diagnosis
+  waiting_parts
+  in_progress
+  quality_check
+  ready
+  delivered
+  on_hold
+  cancelled
+}
+
+enum InvoiceStatus {
+  draft
+  open
+  processing
+  paid
+  void
+  disputed
+}
+
+model Location {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  name         String
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  region       String
+  postalCode   String
+  countryCode  String   @default("US")
+  phone        String
+  email        String
+  timezone     String   @default("America/New_York")
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships  StaffMembership[]
+  appointments Appointment[]
+  estimates    Estimate[]
+  repairOrders RepairOrder[]
+  invoices     Invoice[]
+}
+
+/// Staff access is a membership in a location, not a global role flag.
+model StaffMembership {
+  id         String    @id @default(cuid())
+  locationId String
+  location   Location  @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  email      String
+  name       String
+  role       StaffRole
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([locationId, email])
+  @@index([locationId, role])
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  vehicles     Vehicle[]
+  appointments Appointment[]
+  estimates    Estimate[]
+  repairOrders RepairOrder[]
+  invoices     Invoice[]
+}
+
+model Vehicle {
+  id           String   @id @default(cuid())
+  customerId   String
+  customer     Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  year         Int
+  make         String
+  model        String
+  licensePlate String?
+  vin          String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  appointments Appointment[]
+  estimates    Estimate[]
+  repairOrders RepairOrder[]
+
+  @@index([customerId])
+  @@index([vin])
+}
+
+model Appointment {
+  id         String            @id @default(cuid())
+  locationId String
+  location   Location          @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  customerId String?
+  customer   Customer?         @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  vehicleId  String?
+  vehicle    Vehicle?          @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  status     AppointmentStatus @default(requested)
+  startsAt   DateTime
+  /// Optimistic lock for concurrent staff edits.
+  version    Int               @default(0)
+  guestName  String?
+  guestEmail String?
+  guestPhone String?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@index([locationId, startsAt])
+  @@index([customerId])
+}
+
+model Estimate {
+  id         String         @id @default(cuid())
+  locationId String
+  location   Location       @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  customerId String?
+  customer   Customer?      @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  vehicleId  String?
+  vehicle    Vehicle?       @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  status     EstimateStatus @default(draft)
+  /// Customer-facing revision. A revised estimate keeps the prior revision.
+  revision   Int            @default(1)
+  /// Optimistic lock for concurrent edits.
+  version    Int            @default(0)
+  currency   String         @default("usd")
+  totalCents Int            @default(0)
+  /// Safe to show the customer.
+  customerNotes String?
+  /// Staff-only. Never select this column for the customer portal.
+  internalNotes String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  repairOrders RepairOrder[]
+
+  @@index([locationId, status])
+  @@index([customerId])
+}
+
+model RepairOrder {
+  id         String            @id @default(cuid())
+  locationId String
+  location   Location          @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  customerId String
+  customer   Customer          @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  vehicleId  String
+  vehicle    Vehicle           @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  estimateId String?
+  estimate   Estimate?         @relation(fields: [estimateId], references: [id], onDelete: SetNull)
+  status     RepairOrderStatus @default(intake)
+  /// Optimistic lock for concurrent edits.
+  version    Int               @default(0)
+  /// Customer-visible summary. Safe for the customer portal.
+  customerSummary String?
+  /// Staff-only. Never select this column for the customer portal.
+  internalNotes   String?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  invoices Invoice[]
+
+  @@index([locationId, status])
+  @@index([customerId])
+  @@index([vehicleId])
+}
+
+model Invoice {
+  id              String        @id @default(cuid())
+  locationId      String
+  location        Location      @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  customerId      String
+  customer        Customer      @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  repairOrderId   String?
+  repairOrder     RepairOrder?  @relation(fields: [repairOrderId], references: [id], onDelete: SetNull)
+  status          InvoiceStatus @default(draft)
+  /// Optimistic lock for concurrent edits.
+  version         Int           @default(0)
+  currency        String        @default("usd")
+  totalCents      Int
+  balanceDueCents Int
+  /// Provider payment intent id. Never a card number or CVC.
+  paymentIntentId String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([locationId, status])
+  @@index([customerId])
+}
