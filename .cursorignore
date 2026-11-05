@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+build/
+
+# Generated Prisma client (regenerate with prisma generate)
+src/generated/
+
+# Coverage and caches
+coverage/
+.turbo/
+.vercel/
+*.tsbuildinfo
+
+# Secrets and local env (never index)
+.env
+.env*.local
+*.pem
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS noise
+.DS_Store
