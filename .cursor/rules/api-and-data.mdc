@@ -1,0 +1,16 @@
+---
+description: API, Server Actions, Prisma, and data rules
+globs: "src/app/api/**/*.ts,src/app/**/actions.ts,prisma/**/*.prisma"
+alwaysApply: false
+---
+
+# Data & API Rules
+
+- Domain logic lives in modules, not in route handlers or components.
+- Mutations use Server Actions or Route Handlers.
+- All public POST endpoints must be rate-limited.
+- Webhooks must verify signatures and be idempotent.
+- Prisma queries for customer/admin data must be scoped by customerId / locationId + role.
+- Use optimistic locking or version fields on concurrent edits (estimates, ROs).
+- Write audit log entries for significant staff actions.
+- Availability / slot queries must never be statically cached.
