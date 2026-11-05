@@ -1,16 +1,14 @@
 ---
-description: Authorization, payments, privacy, and audit rules for Berlin AutoWorks
-alwaysApply: false
+description: Security and access control rules
+alwaysApply: true
 ---
 
-# Security and privacy
+# Security Rules
 
-Use this for auth, customer or staff data, uploads, invoices, webhooks, or logging.
-
-- Authorize on the server for every query and mutation. A customer can access only their own resources. Staff are limited to their location membership. Unauthorized access returns 403 and leaks no record data.
-- Launch roles are service advisor, technician, and manager/owner. Technicians work assigned repair orders. Refunds, staff management, settings, and the audit log are manager or owner actions.
-- Do not store or log a card number or CVC. Take payment through the provider's hosted checkout or Payment Element. Verify webhook signatures and make handlers idempotent. Leave an invoice open until the provider confirms payment.
-- Customer pages show only customer-safe notes and photos marked visible to the customer. Internal notes stay on the staff side.
-- Rate-limit login, signup, booking, estimate requests, and password reset. Session cookies are `HttpOnly`, `Secure`, and `SameSite`.
-- Write append-only audit events for estimate send and approval, repair-order status changes, invoice create, pay, and refund, role changes, and catalog or hours changes.
-- Do not commit secrets. Keep personal data out of logs.
+- Role-based access for admin (service advisor, technician, manager/owner).
+- Never expose internal notes, non-customer photos, or other customers’ data.
+- Auth routes (`/login`, `/signup`, etc.) must be noindex and hardened.
+- Use secure, httpOnly, sameSite cookies for sessions.
+- No secrets in client code or committed files.
+- Rate-limit authentication and public form submissions.
+- Payment flows use hosted elements / Payment Element only.
