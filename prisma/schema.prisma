@@ -75,10 +75,29 @@ model Location {
   updatedAt    DateTime @updatedAt
 
   memberships  StaffMembership[]
+  services     Service[]
   appointments Appointment[]
   estimates    Estimate[]
   repairOrders RepairOrder[]
   invoices     Invoice[]
+}
+
+/// Bookable service offered at one location. Copy is safe to show publicly.
+model Service {
+  id          String   @id @default(cuid())
+  locationId  String
+  location    Location @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  slug        String
+  name        String
+  summary     String
+  details     String
+  sortOrder   Int      @default(0)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([locationId, slug])
+  @@index([locationId, isPublished, sortOrder])
 }
 
 /// Staff access is a membership in a location, not a global role flag.
