@@ -1,0 +1,37 @@
+---
+description: Core project conventions for Berlin AutoWorks
+alwaysApply: true
+---
+
+# Berlin AutoWorks — Project Rules
+
+This is a modular monolith Next.js (App Router) + TypeScript application for a fictional auto repair shop.
+
+## Stack
+- Next.js App Router (src/app/) with TypeScript (strict)
+- Server Components by default
+- Prisma + PostgreSQL
+- Redis + BullMQ (or equivalent) for jobs/caching
+- Stripe (or equivalent) for payments — never store card data
+- Auth.js / NextAuth (or Clerk/Auth0)
+- Tailwind CSS + accessible primitives (Radix-based preferred)
+
+## Architecture
+- Three surfaces in one codebase:
+  - Public marketing (`/`)
+  - Customer portal (`/account/**`)
+  - Staff workspace (`/admin/**`)
+- Domain modules (in-process): identity, locations, catalog, scheduling, estimates, repairs, billing, customers, notifications, audit, files
+- Every transactional record must carry `locationId` (multi-location ready)
+- Launch is single-location; do not hard-code a single shop
+
+## Hard Rules
+- Prefer Server Components. Add `"use client"` only when necessary (interactivity, browser APIs, payment elements).
+- Never use the Pages Router.
+- No `any` types. Use `unknown` and narrow.
+- Validate all inputs with Zod.
+- Customer and admin routes must be dynamic, uncached (`Cache-Control: private, no-store`), and noindex.
+- Public marketing pages prefer ISR.
+- Run typecheck + lint before considering a task complete.
+- Card data never touches application servers.
+- Internal notes and non-customer-visible photos must never appear in the customer portal.
