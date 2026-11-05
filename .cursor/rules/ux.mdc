@@ -1,0 +1,14 @@
+---
+description: Accessibility, SEO, and page-behavior rules for the Berlin AutoWorks site and portals
+alwaysApply: false
+---
+
+# UX, accessibility, and SEO
+
+Use this for pages, forms, metadata, or customer-facing copy.
+
+- Target WCAG 2.2 AA on public and customer flows. Interactive flows work from the keyboard, with visible focus, labeled fields, and errors tied to those fields.
+- Public and customer layouts are phone-first. The staff workspace is desktop-first and still usable on a tablet. Booking and estimate forms stay within 3–5 steps.
+- Index home, services, about, fleet, contact, and legal pages. Give each service page its own title and description. Publish canonical URLs, `sitemap.xml`, `robots.txt`, and JSON-LD `LocalBusiness` only where the business data is real.
+- Do not index `/account/**`, `/admin/**`, auth pages, or payment return URLs. Staging stays `noindex`.
+- Empty states name the next action. Load payment and map scripts only on routes that use them.

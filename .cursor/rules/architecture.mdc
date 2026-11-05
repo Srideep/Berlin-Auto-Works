@@ -1,0 +1,16 @@
+---
+description: Modular monolith, rendering strategy, and stack constraints when implementing Berlin AutoWorks
+alwaysApply: false
+---
+
+# Architecture
+
+Use this when adding application code, data models, routes, or infrastructure.
+
+- Modular monolith. Modules call each other in-process: identity, locations, catalog, scheduling, estimates, repairs, billing, customers, notifications, audit, and files. No per-domain microservices and no network RPC between them at launch.
+- Stack: Next.js App Router and TypeScript, React, Prisma, PostgreSQL, Redis plus a queue (BullMQ or equivalent), S3-compatible object storage, a payment provider such as Stripe, transactional email, and Auth.js or Clerk/Auth0. Run a web process and a separate worker. Do not depend on serverless alone for long-running jobs.
+- PostgreSQL is the source of truth for money and approvals. Redis is cache, locks, and queues only. Store blobs in object storage and keep keys, MIME type, visibility, and checksums in the database.
+- Public marketing pages use incremental static regeneration. About and legal pages may be static. Revalidate when the catalog, hours, or legal copy changes. Service pages must include real content in the initial HTML.
+- `/book` and `/estimate` are dynamic. Never cache availability as if it were static.
+- `/account/**`, `/admin/**`, and auth routes are dynamic, `Cache-Control: private, no-store`, and `noindex`.
+- Keep domain logic in modules. Use Server Components to load data and Client Components for the calendar, payment element, and uploads.
