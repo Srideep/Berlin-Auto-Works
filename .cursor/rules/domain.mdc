@@ -1,0 +1,15 @@
+---
+description: Booking, estimate, repair-order, and invoice domain rules for Berlin AutoWorks
+alwaysApply: false
+---
+
+# Domain rules
+
+Use this when changing appointments, estimates, repair orders, invoices, vehicles, or notifications.
+
+- Appointments, estimates, repair orders, invoices, staff memberships, and catalog overrides include `locationId`. Offered slots respect that location's hours, blackouts, and capacity.
+- A customer can approve an estimate, decline it, or request changes. Keep prior versions. A price change after approval needs a new customer approval before the extra work starts. Do not silently reuse an expired estimate.
+- Repair-order statuses are `intake`, `diagnosis`, `waiting_parts`, `in_progress`, `quality_check`, `ready`, and `delivered`, plus `cancelled` and `on_hold`. Waiting on the customer uses `on_hold` and blocks further billable work until they decide.
+- Launch payments collect the full balance only. A failed or abandoned payment leaves the invoice open. Refunds go through the payment provider and are started by a manager.
+- Status changes and customer-visible notes notify the customer according to their preferences. When a staff action will notify the customer, say so before it is submitted.
+- A vehicle at launch requires year, make, model, and plate. VIN is optional. A matching VIN or plate prompts a soft merge instead of a silent duplicate.

@@ -1,0 +1,15 @@
+---
+description: Berlin AutoWorks product identity, launch scope, and source of truth
+alwaysApply: true
+---
+
+# Berlin AutoWorks
+
+Fictional full-service auto repair shop. Launch is one location in Berlin, New Jersey. Brand line: "Reliable repair. Straight answers. Ready for the road."
+
+- `PLANNING.md` is the product and architecture source of truth. Do not widen launch scope past it.
+- Placeholder contact until real details replace it: 123 Route 73, Berlin, NJ 08009; (856) 555-0147; service@berlinautoworks.example. Hours: Mon–Fri 8:00 AM–6:00 PM, Sat 8:00 AM–3:00 PM, Sunday closed. Do not publish fake reviews.
+- Three surfaces share one codebase: public marketing, customer portal (`/account`), and staff workspace (`/admin`).
+- Every transactional record carries `locationId`. Do not hard-code a single shop in schemas or queries. Do not build multi-location UI at launch.
+- Launch covers marketing and the service catalog, guest and account booking, estimates (approve, decline, or request changes), repair-order status, invoices paid in full, vehicles and history, staff operations, email notifications, RBAC, and an audit log.
+- Leave for later: multi-location UI, fleet portal, SMS-first notifications, partial payments, financing, inventory, accounting sync, blog or CMS, native apps, live chat, and real-time bay boards.
