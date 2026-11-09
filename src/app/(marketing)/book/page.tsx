@@ -22,7 +22,7 @@ export default async function BookPage() {
       <h1 className="text-4xl font-medium tracking-tight text-ink">Book service</h1>
       <p className="mt-3 text-lg leading-8 text-muted">
         Tell us the job, the vehicle, and how to reach you. Open appointment times
-        are not cached. This preview checks the form and does not create an appointment.
+        are not cached. The request is saved for the shop to confirm.
       </p>
       <div className="mt-8">
         <PreviewForm
@@ -109,6 +109,11 @@ export default async function BookPage() {
                   label: "Notes",
                   type: "textarea",
                   autoComplete: "off",
+                },
+                {
+                  name: "fileId",
+                  label: "Photo",
+                  type: "photo",
                 },
               ],
             },

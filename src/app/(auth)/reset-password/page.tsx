@@ -9,13 +9,19 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function ResetPasswordPage() {
+export default async function ResetPasswordPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ token?: string }>;
+}) {
+  const params = await searchParams;
+  const token = typeof params.token === "string" ? params.token : "";
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-4xl font-medium text-ink">Reset password</h1>
         <p className="mt-2 text-base leading-7 text-muted">
-          Reset links are not issued yet. The new password is checked and then discarded.
+          Choose a new password. This link works once.
         </p>
       </div>
       <PreviewForm
@@ -25,7 +31,7 @@ export default function ResetPasswordPage() {
         sections={[
           {
             title: "New password",
-            description: "Paste the token from the reset email when that email exists.",
+            description: "The token arrives in the reset email. The link fills it in.",
             fields: [
               {
                 name: "token",
@@ -33,6 +39,7 @@ export default function ResetPasswordPage() {
                 type: "text",
                 required: true,
                 autoComplete: "off",
+                defaultValue: token,
               },
               {
                 name: "password",

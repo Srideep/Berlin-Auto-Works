@@ -3,7 +3,10 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { connection } from "next/server";
 
+import { SignOutButton } from "@/components/account/sign-out-button";
 import { PreviewBanner } from "@/components/ui/preview-banner";
+import { authConfigured } from "@/auth";
+import { requireStaff } from "@/modules/identity/current-session";
 import { staffRoleLabels } from "@/modules/identity/roles";
 
 export const instant = false;
@@ -33,6 +36,7 @@ const links = [
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   await connection();
+  const staff = await requireStaff();
 
   return (
     <div className="flex min-h-full flex-col md:grid md:grid-cols-[15rem_1fr]">
@@ -42,9 +46,14 @@ export default async function AdminLayout({ children }: { children: ReactNode })
             Shop workspace
           </Link>
           <p className="mt-2 text-xs leading-5 text-muted">
-            Roles: {Object.values(staffRoleLabels).join(", ")}. Access checks are
-            not connected, so this preview does not open shop records.
+            Roles: {Object.values(staffRoleLabels).join(", ")}.
+            {staff ? ` Signed in as ${staff.user.name}.` : " Sign-in is not configured."}
           </p>
+          {staff ? (
+            <div className="mt-3">
+              <SignOutButton />
+            </div>
+          ) : null}
         </div>
         <nav aria-label="Workspace" className="flex gap-2 overflow-x-auto px-4 pb-4 md:flex-col md:overflow-visible">
           {links.map((link) => (
@@ -59,9 +68,11 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         </nav>
       </aside>
       <div className="flex min-w-0 flex-col">
-        <PreviewBanner>
-          Staff sign-in is not connected. Lists stay empty so customer records are not shown.
-        </PreviewBanner>
+        {authConfigured() ? null : (
+          <PreviewBanner>
+            Staff sign-in is not configured. Lists stay empty so customer records are not shown.
+          </PreviewBanner>
+        )}
         <main id="main" className="flex-1 px-4 py-8 md:px-8">
           {children}
         </main>

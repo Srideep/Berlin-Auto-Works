@@ -16,7 +16,7 @@ export default function SignupPage() {
       <div>
         <h1 className="text-4xl font-medium text-ink">Create an account</h1>
         <p className="mt-2 text-base leading-7 text-muted">
-          Accounts are not stored yet. The form checks the fields and then stops.
+          Create an account to see your vehicles, estimates, and invoices.
         </p>
       </div>
       <PreviewForm
@@ -26,7 +26,7 @@ export default function SignupPage() {
         sections={[
           {
             title: "Your details",
-            description: "A password needs at least 12 characters. It is not saved.",
+            description: "A password needs at least 12 characters.",
             fields: [
               {
                 name: "name",

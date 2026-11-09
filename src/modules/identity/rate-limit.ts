@@ -2,6 +2,8 @@ import "server-only";
 
 import { headers } from "next/headers";
 
+import { getRateLimitRedis } from "@/lib/redis";
+
 interface Bucket {
   hits: number[];
 }
@@ -20,6 +22,7 @@ export const rateLimitPolicies = {
   resetPassword: { limit: 5, windowMs: 60 * 60 * 1000 },
   booking: { limit: 8, windowMs: 60 * 60 * 1000 },
   estimate: { limit: 8, windowMs: 60 * 60 * 1000 },
+  upload: { limit: 20, windowMs: 60 * 60 * 1000 },
 } as const;
 
 export type RateLimitPolicyName = keyof typeof rateLimitPolicies;
@@ -52,6 +55,31 @@ export function consumeRateLimit(
   return { allowed: true, retryAfterSeconds: 0 };
 }
 
+async function consumeRedisRateLimit(
+  key: string,
+  limit: number,
+  windowMs: number,
+): Promise<RateLimitDecision | null> {
+  const redis = getRateLimitRedis();
+  if (!redis) {
+    return null;
+  }
+  const bucket = Math.floor(Date.now() / windowMs);
+  const redisKey = `rl:${key}:${bucket}`;
+  const count = await redis.incr(redisKey);
+  if (count === 1) {
+    await redis.pexpire(redisKey, windowMs);
+  }
+  if (count > limit) {
+    const ttl = await redis.pttl(redisKey);
+    return {
+      allowed: false,
+      retryAfterSeconds: Math.max(1, Math.ceil(ttl / 1000)),
+    };
+  }
+  return { allowed: true, retryAfterSeconds: 0 };
+}
+
 export async function enforceRateLimit(
   policy: RateLimitPolicyName,
 ): Promise<RateLimitDecision> {
@@ -62,5 +90,10 @@ export async function enforceRateLimit(
     headerStore.get("x-real-ip") ||
     "unknown";
   const { limit, windowMs } = rateLimitPolicies[policy];
-  return consumeRateLimit(`${policy}:${address}`, limit, windowMs);
+  const key = `${policy}:${address}`;
+  const redisDecision = await consumeRedisRateLimit(key, limit, windowMs);
+  if (redisDecision) {
+    return redisDecision;
+  }
+  return consumeRateLimit(key, limit, windowMs);
 }

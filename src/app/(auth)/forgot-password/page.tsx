@@ -16,7 +16,7 @@ export default function ForgotPasswordPage() {
       <div>
         <h1 className="text-4xl font-medium text-ink">Forgot password</h1>
         <p className="mt-2 text-base leading-7 text-muted">
-          Password reset email is not connected. Submitting this form does not send a message.
+          If the email matches an account, we send a one-time reset link.
         </p>
       </div>
       <PreviewForm

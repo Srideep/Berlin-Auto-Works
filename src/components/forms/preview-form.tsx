@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 
 import { PhoneInput } from "@/components/forms/phone-input";
+import { PhotoUpload } from "@/components/forms/photo-upload";
 import { VehicleYmmFields } from "@/components/forms/vehicle-ymm-fields";
 import {
   initialActionState,
@@ -22,9 +23,11 @@ export interface FormField {
     | "password"
     | "textarea"
     | "select"
-    | "number";
+    | "number"
+    | "photo";
   autoComplete?: string;
   required?: boolean;
+  defaultValue?: string;
   options?: readonly { value: string; label: string }[];
 }
 
@@ -58,7 +61,9 @@ export function PreviewForm({
           className={`rounded-xl px-4 py-3 text-sm leading-6 ${
             state.status === "invalid" || state.status === "limited"
               ? "bg-red-50 text-danger"
-              : "bg-card text-ink ring-1 ring-line"
+              : state.status === "success"
+                ? "bg-card text-pine ring-1 ring-line"
+                : "bg-card text-ink ring-1 ring-line"
           }`}
         >
           {state.message}
@@ -87,7 +92,9 @@ export function PreviewForm({
                 <div
                   key={field.name}
                   className={
-                    field.type === "textarea" || field.type === "vehicleYmm"
+                    field.type === "textarea" ||
+                    field.type === "vehicleYmm" ||
+                    field.type === "photo"
                       ? "sm:col-span-2"
                       : undefined
                   }
@@ -119,6 +126,7 @@ export function PreviewForm({
                       className={className}
                     />
                   ) : null}
+                  {field.type === "photo" ? <PhotoUpload id={inputId} /> : null}
                   {field.type === "phone" ? (
                     <PhoneInput
                       id={inputId}
@@ -164,12 +172,14 @@ export function PreviewForm({
                   {field.type !== "textarea" &&
                   field.type !== "select" &&
                   field.type !== "phone" &&
+                  field.type !== "photo" &&
                   field.type !== "vehicleYmm" ? (
                     <input
                       id={inputId}
                       name={field.name}
                       type={field.type}
                       required={field.required}
+                      defaultValue={field.defaultValue}
                       autoComplete={field.autoComplete}
                       aria-invalid={error ? true : undefined}
                       aria-describedby={describedBy}

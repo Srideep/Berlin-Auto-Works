@@ -23,17 +23,20 @@ function readFormValues(formData: FormData): Record<string, string> {
   return values;
 }
 
-export async function runPreviewAction(
+export async function parseFormAction<T>(
   policy: RateLimitPolicyName,
-  schema: ZodType,
+  schema: ZodType<T>,
   formData: FormData,
-): Promise<ActionState> {
+): Promise<{ ok: true; data: T } | { ok: false; state: ActionState }> {
   const decision = await enforceRateLimit(policy);
   if (!decision.allowed) {
     return {
-      status: "limited",
-      message: `Too many attempts. Try again in about ${decision.retryAfterSeconds} seconds.`,
-      fieldErrors: {},
+      ok: false,
+      state: {
+        status: "limited",
+        message: `Too many attempts. Try again in about ${decision.retryAfterSeconds} seconds.`,
+        fieldErrors: {},
+      },
     };
   }
 
@@ -42,18 +45,36 @@ export async function runPreviewAction(
     const fieldErrors = fieldErrorsFromZod(parsed.error);
     if (fieldErrors.company) {
       return {
-        status: "invalid",
-        message: "Could not submit that form.",
-        fieldErrors: {},
+        ok: false,
+        state: {
+          status: "invalid",
+          message: "Could not submit that form.",
+          fieldErrors: {},
+        },
       };
     }
     return {
-      status: "invalid",
-      message: "Check the highlighted fields and try again.",
-      fieldErrors,
+      ok: false,
+      state: {
+        status: "invalid",
+        message: "Check the highlighted fields and try again.",
+        fieldErrors,
+      },
     };
   }
 
+  return { ok: true, data: parsed.data };
+}
+
+export async function runPreviewAction(
+  policy: RateLimitPolicyName,
+  schema: ZodType,
+  formData: FormData,
+): Promise<ActionState> {
+  const parsed = await parseFormAction(policy, schema, formData);
+  if (!parsed.ok) {
+    return parsed.state;
+  }
   return {
     status: "unavailable",
     message: unavailableMessage,

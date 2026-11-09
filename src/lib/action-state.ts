@@ -1,5 +1,5 @@
 export interface ActionState {
-  status: "idle" | "invalid" | "limited" | "unavailable";
+  status: "idle" | "invalid" | "limited" | "unavailable" | "success";
   message: string;
   fieldErrors: Readonly<Record<string, string>>;
 }
