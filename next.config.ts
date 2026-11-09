@@ -37,6 +37,14 @@ const privateRouteSources = [
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
+  // Netlify sets x-forwarded-host to "<site>.netlify.app:80". The browser
+  // Origin host has no port, so Next.js rejects every Server Action until
+  // the public host is listed here. The wildcard covers deploy-preview hosts.
+  experimental: {
+    serverActions: {
+      allowedOrigins: ["berl.netlify.app", "*.netlify.app"],
+    },
+  },
   turbopack: {
     rules: {
       "*.css": {
