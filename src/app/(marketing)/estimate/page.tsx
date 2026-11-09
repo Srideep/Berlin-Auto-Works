@@ -19,8 +19,7 @@ export default async function EstimatePage() {
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
       <h1 className="text-4xl font-medium tracking-tight text-ink">Request an estimate</h1>
       <p className="mt-3 text-lg leading-8 text-muted">
-        Describe the concern and the vehicle. This preview validates the request
-        and does not create an estimate.
+        Describe the concern and the vehicle. The request is saved for an advisor.
       </p>
       <div className="mt-8">
         <PreviewForm
@@ -90,6 +89,11 @@ export default async function EstimatePage() {
                   type: "phone",
                   required: true,
                   autoComplete: "tel",
+                },
+                {
+                  name: "fileId",
+                  label: "Photo",
+                  type: "photo",
                 },
               ],
             },

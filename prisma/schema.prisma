@@ -57,6 +57,11 @@ enum InvoiceStatus {
   disputed
 }
 
+enum FileVisibility {
+  customer
+  internal
+}
+
 model Location {
   id           String   @id @default(cuid())
   slug         String   @unique
@@ -80,6 +85,7 @@ model Location {
   estimates    Estimate[]
   repairOrders RepairOrder[]
   invoices     Invoice[]
+  storedFiles  StoredFile[]
 }
 
 /// Bookable service offered at one location. Copy is safe to show publicly.
@@ -128,6 +134,7 @@ model Customer {
   estimates    Estimate[]
   repairOrders RepairOrder[]
   invoices     Invoice[]
+  user         User?
 }
 
 model Vehicle {
@@ -165,8 +172,16 @@ model Appointment {
   guestName  String?
   guestEmail String?
   guestPhone String?
+  /// Published service slug chosen on the booking form.
+  serviceSlug   String?
+  notes         String?
+  vehicleYear   Int?
+  vehicleMake   String?
+  vehicleModel  String?
   createdAt  DateTime          @default(now())
   updatedAt  DateTime          @updatedAt
+
+  storedFiles StoredFile[]
 
   @@index([locationId, startsAt])
   @@index([customerId])
@@ -195,6 +210,7 @@ model Estimate {
   updatedAt  DateTime       @updatedAt
 
   repairOrders RepairOrder[]
+  storedFiles  StoredFile[]
 
   @@index([locationId, status])
   @@index([customerId])
@@ -248,4 +264,58 @@ model Invoice {
 
   @@index([locationId, status])
   @@index([customerId])
+}
+
+/// Credential account. Staff access still comes from StaffMembership, matched by email.
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  /// Incremented to revoke outstanding sessions, including after a password reset.
+  tokenVersion Int       @default(0)
+  customerId   String?   @unique
+  customer     Customer? @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  resetTokens PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+/// Object storage metadata. Bytes stay in the bucket.
+model StoredFile {
+  id              String         @id @default(cuid())
+  locationId      String
+  location        Location       @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  visibility      FileVisibility @default(customer)
+  objectKey       String         @unique
+  contentType     String
+  byteSize        Int
+  uploadTokenHash String
+  appointmentId   String?
+  appointment     Appointment?   @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  estimateId      String?
+  estimate        Estimate?      @relation(fields: [estimateId], references: [id], onDelete: SetNull)
+  createdAt       DateTime       @default(now())
+
+  @@index([locationId, visibility])
+  @@index([appointmentId])
+  @@index([estimateId])
+}
+
+/// Stripe event id. A repeated delivery is acknowledged and not applied twice.
+model StripeEvent {
+  id         String   @id
+  receivedAt DateTime @default(now())
 }

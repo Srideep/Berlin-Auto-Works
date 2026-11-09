@@ -32,6 +32,8 @@ export const estimateRequestSchema = z.object({
     .string()
     .trim()
     .refine(isCompleteUsPhone, "Enter a phone number as xxx-xxx-xxxx."),
+  fileId: z.string().trim().max(40).default(""),
+  fileToken: z.string().trim().max(200).default(""),
   company: z.string().max(0),
 });
 

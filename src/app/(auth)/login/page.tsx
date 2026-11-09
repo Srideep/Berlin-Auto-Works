@@ -16,7 +16,7 @@ export default function LoginPage() {
       <div>
         <h1 className="text-4xl font-medium text-ink">Sign in</h1>
         <p className="mt-2 text-base leading-7 text-muted">
-          Customer sign-in is not connected. This form is rate-limited and does not create a session.
+          Use the email and password on your account.
         </p>
       </div>
       <PreviewForm
