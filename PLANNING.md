@@ -140,6 +140,130 @@ Base: `/admin` (staff auth + RBAC; noindex; not linked from public nav).
 
 ---
 
+### 1.4.1 Staff workplace architecture
+
+These diagrams restate the sitemap, the launch roles, and the staff write path. They do not add routes or capabilities. Vehicle records (`/admin/vehicles/[id]`) open from a customer; they are not a separate nav item.
+
+#### Route map
+
+Every `/admin` route is dynamic, sent with `Cache-Control: private, no-store`, and marked noindex. The areas below follow the staff nav order.
+
+```mermaid
+flowchart TB
+  workplace["/admin dynamic, Cache-Control private no-store, noindex"]
+  workplace --> today["Today /admin"]
+  workplace --> calendar["Calendar /admin/calendar"]
+  workplace --> appointments["Appointments /admin/appointments"]
+  workplace --> customers["Customers /admin/customers"]
+  workplace --> estimates["Estimates /admin/estimates"]
+  workplace --> repairs["Repair orders /admin/repairs"]
+  workplace --> invoices["Invoices /admin/invoices"]
+  workplace --> services["Services /admin/services"]
+  workplace --> hours["Hours /admin/hours"]
+  workplace --> staffUsers["Staff /admin/staff"]
+  workplace --> settings["Settings /admin/settings"]
+  workplace --> auditLog["Audit log /admin/audit"]
+```
+
+#### Who can open what
+
+Capabilities match the launch role map. A missing capability returns the 403 page and does not include the record in the API response.
+
+```mermaid
+flowchart TB
+  advisor[Service advisor]
+  technician[Technician]
+  manager["Manager / owner"]
+  advisor --> dayWork["Calendar, appointments, customers, estimates, repair orders, invoices"]
+  technician --> assigned["Assigned repair orders: status, internal notes, photos"]
+  manager --> dayWork
+  manager --> shopSetup["Staff, hours, catalog, settings, audit, refunds"]
+  missing[Missing capability] --> forbidden["403 and no record in the response"]
+```
+
+| Role | Opens |
+|------|--------|
+| Service advisor | Calendar, appointments, customers, estimates, repair orders, invoices |
+| Technician | Assigned repair orders only: status, internal notes, photo upload |
+| Manager / owner | Every advisor capability, plus staff, hours, catalog, settings, audit, and refunds |
+
+#### Staff write path
+
+A staff write stays inside the modular monolith. The transactional row carries `locationId`. Photos use a signed URL. The invoice stores a payment-provider reference; card data stays with the provider.
+
+```mermaid
+flowchart TB
+  staff[Staff browser] --> admin["Admin route Server Component or Server Action"]
+  admin --> authz["Session and location-scoped RBAC"]
+  authz --> module["In-process domain module"]
+  module --> db["PostgreSQL row with locationId"]
+  module --> auditEvent["Append-only audit event"]
+  module --> queue["Redis BullMQ notification job"]
+  queue --> worker[Worker]
+  worker --> email[Email provider]
+  module --> signed["Signed upload URL"]
+  signed --> storage[Object storage]
+  module --> invoiceRef["Invoice stores provider reference"]
+  invoiceRef --> psp["Payment provider holds card data"]
+```
+
+#### Advisor day and repair status
+
+Flow F is the advisor’s day. Repair status follows the launch chain. `on_hold` and `cancelled` leave that chain; the diagram does not add a return path. A customer-visible timeline update is separate from an internal note, which never appears in the customer portal.
+
+```mermaid
+sequenceDiagram
+  participant Advisor
+  participant Today as Today board
+  participant Appointment
+  participant Estimate
+  participant Repair as Repair order
+  participant Invoice
+  participant Provider as Payment provider
+  Advisor->>Today: Open /admin
+  Today-->>Advisor: Appointments, estimates awaiting approval, repairs ready for pickup
+  Advisor->>Appointment: Check in
+  Advisor->>Repair: Create or link the repair order
+  Advisor->>Estimate: Send the estimate
+  Estimate-->>Advisor: Customer approves
+  Advisor->>Repair: Move status through the day
+  Advisor->>Invoice: Close the repair and send the invoice
+  Provider-->>Invoice: Webhook confirms payment
+  Advisor->>Repair: Confirm pickup
+```
+
+```mermaid
+stateDiagram-v2
+  [*] --> intake
+  intake --> diagnosis
+  diagnosis --> waiting_parts
+  waiting_parts --> in_progress
+  in_progress --> quality_check
+  quality_check --> ready
+  ready --> delivered
+  delivered --> [*]
+  intake --> on_hold
+  diagnosis --> on_hold
+  waiting_parts --> on_hold
+  in_progress --> on_hold
+  quality_check --> on_hold
+  ready --> on_hold
+  intake --> cancelled
+  diagnosis --> cancelled
+  waiting_parts --> cancelled
+  in_progress --> cancelled
+  quality_check --> cancelled
+  ready --> cancelled
+```
+
+```mermaid
+flowchart LR
+  change[Status or note change] --> customerSafe["Customer timeline on /account/repairs/id"]
+  change --> internalNote["Internal notes stay in the staff workplace"]
+```
+
+---
+
 ### 1.5 User flows — happy paths and key exceptions
 
 #### Flow A — Guest books a service (public → optional account)
@@ -337,8 +461,10 @@ Customer dashboard
        └─ Optional React Query/SWR for interactive refresh
 
 Admin RO workspace
-  └─ Session + role → Prisma → optimistic UI for status updates
-       └─ Mutations write audit log + enqueue notifications
+  └─ Staff write path (section 1.4.1): session and location-scoped RBAC
+       → in-process module → Postgres (locationId)
+       → append-only audit event and Redis/BullMQ notification job
+       → photos by signed URL; invoice stores a payment-provider reference only
 ```
 
 ---

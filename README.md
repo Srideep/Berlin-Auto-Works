@@ -44,6 +44,41 @@ Three surfaces share one codebase and one API boundary.
 
 **Staff workspace:** operations dashboard, calendar, appointments, customers, estimates, repair orders, invoices, service catalog, hours, staff, settings, and an audit log. Launch roles are service advisor, technician, and manager/owner.
 
+The route map follows that nav. Every `/admin` route is dynamic, sent with `Cache-Control: private, no-store`, and marked noindex. The write path is the same for a status change, a photo, or an invoice. Role access, the advisor’s day, and repair statuses are in [PLANNING.md](PLANNING.md) section 1.4.1.
+
+```mermaid
+flowchart TB
+  workplace["/admin dynamic, Cache-Control private no-store, noindex"]
+  workplace --> today["Today /admin"]
+  workplace --> calendar["Calendar /admin/calendar"]
+  workplace --> appointments["Appointments /admin/appointments"]
+  workplace --> customers["Customers /admin/customers"]
+  workplace --> estimates["Estimates /admin/estimates"]
+  workplace --> repairs["Repair orders /admin/repairs"]
+  workplace --> invoices["Invoices /admin/invoices"]
+  workplace --> services["Services /admin/services"]
+  workplace --> hours["Hours /admin/hours"]
+  workplace --> staffUsers["Staff /admin/staff"]
+  workplace --> settings["Settings /admin/settings"]
+  workplace --> auditLog["Audit log /admin/audit"]
+```
+
+```mermaid
+flowchart TB
+  staff[Staff browser] --> admin["Admin route Server Component or Server Action"]
+  admin --> authz["Session and location-scoped RBAC"]
+  authz --> module["In-process domain module"]
+  module --> db["PostgreSQL row with locationId"]
+  module --> auditEvent["Append-only audit event"]
+  module --> queue["Redis BullMQ notification job"]
+  queue --> worker[Worker]
+  worker --> email[Email provider]
+  module --> signed["Signed upload URL"]
+  signed --> storage[Object storage]
+  module --> invoiceRef["Invoice stores provider reference"]
+  invoiceRef --> psp["Payment provider holds card data"]
+```
+
 ## Services
 
 Preventive maintenance and oil changes, diagnostics, brakes, tires and alignment, battery / starter / alternator, suspension and steering, engine and transmission, HVAC, exhaust, pre-purchase inspection prep, and fleet maintenance.
