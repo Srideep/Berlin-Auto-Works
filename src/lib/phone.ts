@@ -7,24 +7,19 @@ export function parseUsPhoneDigits(value: string): string {
   return digits.slice(0, 10);
 }
 
-/** Format for display and form submission: +1 (xxx) xxx-xxxx */
+/** Format for display and form submission: xxx-xxx-xxxx */
 export function formatUsPhoneDisplay(digits: string): string {
   const d = parseUsPhoneDigits(digits);
   if (d.length === 0) {
     return "";
   }
-  let formatted = "+1 ";
-  formatted += `(${d.slice(0, 3)}`;
-  if (d.length >= 3) {
-    formatted += ")";
+  if (d.length <= 3) {
+    return d;
   }
-  if (d.length > 3) {
-    formatted += ` ${d.slice(3, 6)}`;
+  if (d.length <= 6) {
+    return `${d.slice(0, 3)}-${d.slice(3)}`;
   }
-  if (d.length > 6) {
-    formatted += `-${d.slice(6, 10)}`;
-  }
-  return formatted;
+  return `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`;
 }
 
 /** Reformat while the customer types. */
