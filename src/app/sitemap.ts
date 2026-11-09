@@ -1,10 +1,11 @@
 import type { MetadataRoute } from "next";
 
 import { getSiteUrl } from "@/lib/site";
-import { serviceOfferings } from "@/modules/catalog/services";
+import { listPublishedServices } from "@/modules/catalog/published";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = getSiteUrl();
+  const services = await listPublishedServices();
   const staticPaths = [
     "/",
     "/services",
@@ -22,7 +23,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...staticPaths.map((path) => ({
       url: new URL(path, siteUrl).toString(),
     })),
-    ...serviceOfferings.map((service) => ({
+    ...services.map((service) => ({
       url: new URL(`/services/${service.slug}`, siteUrl).toString(),
     })),
   ];

@@ -18,9 +18,9 @@ export interface ShopProfile {
 }
 
 /**
- * Placeholder copy for the launch shop. Public pages read this until a
- * Location row is loaded from the database. It is content, not a hard-coded
- * location id in queries.
+ * Launch copy. Public pages load name, address, phone, and email from the
+ * active Location row. Tagline and hours stay here until they are columns.
+ * This slug is content, not a location id in queries.
  */
 export const launchShopProfile = {
   slug: "berlin",

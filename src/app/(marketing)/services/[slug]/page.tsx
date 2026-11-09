@@ -3,17 +3,21 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
 
-import { getService, serviceOfferings } from "@/modules/catalog/services";
+import {
+  getPublishedService,
+  listPublishedServices,
+} from "@/modules/catalog/published";
 
-export function generateStaticParams(): Array<{ slug: string }> {
-  return serviceOfferings.map((service) => ({ slug: service.slug }));
+export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
+  const services = await listPublishedServices();
+  return services.map((service) => ({ slug: service.slug }));
 }
 
 export async function generateMetadata({
   params,
 }: PageProps<"/services/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  const service = getService(slug);
+  const service = await getPublishedService(slug);
   if (!service) {
     return { title: "Service" };
   }
@@ -30,7 +34,7 @@ export default async function ServiceDetailPage({
   cacheLife("marketing");
 
   const { slug } = await params;
-  const service = getService(slug);
+  const service = await getPublishedService(slug);
   if (!service) {
     notFound();
   }

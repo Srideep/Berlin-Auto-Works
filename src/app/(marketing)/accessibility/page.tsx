@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 
 import { LegalDocument } from "@/components/marketing/legal-document";
-import { launchShopProfile } from "@/modules/locations/profile";
+import { getPublicShop } from "@/modules/locations/public-shop";
 
 export const metadata: Metadata = {
   title: "Accessibility",
@@ -13,16 +13,17 @@ export default async function AccessibilityPage() {
   "use cache";
   cacheLife("legal");
 
+  const shop = await getPublicShop();
+
   return (
     <LegalDocument title="Accessibility">
       <p>
-        {launchShopProfile.brand} aims for WCAG 2.2 Level AA on the public site
+        {shop.brand} aims for WCAG 2.2 Level AA on the public site
         and the customer portal. Pages use headings, labels, and visible focus.
       </p>
       <p>
-        If something on this site blocks you, email {launchShopProfile.email} or
-        call {launchShopProfile.phoneDisplay}. Both are placeholders until the
-        shop publishes its real contact details.
+        If something on this site blocks you, email {shop.email} or call{" "}
+        {shop.phoneDisplay}.
       </p>
     </LegalDocument>
   );
