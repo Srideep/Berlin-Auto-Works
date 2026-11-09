@@ -187,24 +187,55 @@ flowchart TB
 | Technician | Assigned repair orders only: status, internal notes, photo upload |
 | Manager / owner | Every advisor capability, plus staff, hours, catalog, settings, audit, and refunds |
 
+#### Connected systems
+
+Neon is the system of record. Auth.js, Redis and BullMQ, Resend, S3-compatible storage, and Stripe are call paths in the app. Each one stays quiet when its environment variable is unset. `App --> Email` is the fallback used when `REDIS_URL` is unset. Netlify does not run `npm run worker`.
+
+```mermaid
+flowchart LR
+  App[Next.js on Netlify]
+  Neon[(Neon Postgres)]
+  Redis[(Redis and BullMQ)]
+  Worker[npm run worker]
+  Files[(S3-compatible files)]
+  Stripe[Stripe Payment Element]
+  Email[Resend]
+  Auth[Auth.js session]
+  Vpic[NHTSA vPIC]
+
+  App --> Neon
+  App --> Auth
+  Auth --> Neon
+  App --> Redis
+  Redis --> Worker
+  Worker --> Email
+  App --> Email
+  App --> Files
+  App --> Stripe
+  Stripe -->|signed webhook| App
+  App --> Vpic
+```
+
+Connected today: public shop and catalog reads, guest booking and estimate rows, optional photos, customer and staff session gates, and payment of an owned open invoice. The staff write path below is the target for advisor actions. Those admin screens do not load or change records yet.
+
 #### Staff write path
 
-A staff write stays inside the modular monolith. The transactional row carries `locationId`. Photos use a signed URL. The invoice stores a payment-provider reference; card data stays with the provider.
+A staff write stays inside the modular monolith. The transactional row carries `locationId`. Photos use a signed URL. The invoice stores a Stripe payment intent id. Card data stays with Stripe.
 
 ```mermaid
 flowchart TB
-  staff[Staff browser] --> admin["Admin route Server Component or Server Action"]
-  admin --> authz["Session and location-scoped RBAC"]
+  staff[Staff browser] --> admin["Admin route"]
+  admin --> authz["Auth.js session and StaffMembership"]
   authz --> module["In-process domain module"]
-  module --> db["PostgreSQL row with locationId"]
+  module --> neon["Neon row with locationId"]
   module --> auditEvent["Append-only audit event"]
-  module --> queue["Redis BullMQ notification job"]
-  queue --> worker[Worker]
-  worker --> email[Email provider]
-  module --> signed["Signed upload URL"]
-  signed --> storage[Object storage]
-  module --> invoiceRef["Invoice stores provider reference"]
-  invoiceRef --> psp["Payment provider holds card data"]
+  module --> queue["Redis and BullMQ"]
+  queue --> worker["npm run worker"]
+  worker --> email[Resend]
+  module --> signed["Signed PUT URL"]
+  signed --> storage["S3-compatible files"]
+  module --> invoiceRef["Invoice stores paymentIntentId"]
+  invoiceRef --> stripe["Stripe holds the card data"]
 ```
 
 #### Advisor day and repair status
@@ -219,7 +250,7 @@ sequenceDiagram
   participant Estimate
   participant Repair as Repair order
   participant Invoice
-  participant Provider as Payment provider
+  participant Provider as Stripe
   Advisor->>Today: Open /admin
   Today-->>Advisor: Appointments, estimates awaiting approval, repairs ready for pickup
   Advisor->>Appointment: Check in

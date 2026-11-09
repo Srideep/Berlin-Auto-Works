@@ -44,7 +44,7 @@ Three surfaces share one codebase and one API boundary.
 
 **Staff workspace:** operations dashboard, calendar, appointments, customers, estimates, repair orders, invoices, service catalog, hours, staff, settings, and an audit log. Launch roles are service advisor, technician, and manager/owner.
 
-The route map follows that nav. Every `/admin` route is dynamic, sent with `Cache-Control: private, no-store`, and marked noindex. The write path is the same for a status change, a photo, or an invoice. Role access, the advisor’s day, and repair statuses are in [PLANNING.md](PLANNING.md) section 1.4.1.
+The route map follows that nav. Every `/admin` route is dynamic, sent with `Cache-Control: private, no-store`, and marked noindex. Auth.js already requires a session, and `/admin` also requires a `StaffMembership` for that email. Role access, the advisor’s day, and repair statuses are in [PLANNING.md](PLANNING.md) section 1.4.1. Staff list pages past that gate do not load or change shop records yet.
 
 ```mermaid
 flowchart TB
@@ -65,39 +65,68 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-  staff[Staff browser] --> admin["Admin route Server Component or Server Action"]
-  admin --> authz["Session and location-scoped RBAC"]
+  staff[Staff browser] --> admin["Admin route"]
+  admin --> authz["Auth.js session and StaffMembership"]
   authz --> module["In-process domain module"]
-  module --> db["PostgreSQL row with locationId"]
+  module --> neon["Neon row with locationId"]
   module --> auditEvent["Append-only audit event"]
-  module --> queue["Redis BullMQ notification job"]
-  queue --> worker[Worker]
-  worker --> email[Email provider]
-  module --> signed["Signed upload URL"]
-  signed --> storage[Object storage]
-  module --> invoiceRef["Invoice stores provider reference"]
-  invoiceRef --> psp["Payment provider holds card data"]
+  module --> queue["Redis and BullMQ"]
+  queue --> worker["npm run worker"]
+  worker --> email[Resend]
+  module --> signed["Signed PUT URL"]
+  signed --> storage["S3-compatible files"]
+  module --> invoiceRef["Invoice stores paymentIntentId"]
+  invoiceRef --> stripe["Stripe holds the card data"]
+```
+
+The staff diagram is the target write path. These calls are connected today: public shop and catalog reads, guest booking and estimate saves, optional photos, Auth.js, and payment of an owned open invoice.
+
+```mermaid
+flowchart LR
+  App[Next.js on Netlify]
+  Neon[(Neon Postgres)]
+  Redis[(Redis and BullMQ)]
+  Worker[npm run worker]
+  Files[(S3-compatible files)]
+  Stripe[Stripe Payment Element]
+  Email[Resend]
+  Auth[Auth.js session]
+  Vpic[NHTSA vPIC]
+
+  App --> Neon
+  App --> Auth
+  Auth --> Neon
+  App --> Redis
+  Redis --> Worker
+  Worker --> Email
+  App --> Email
+  App --> Files
+  App --> Stripe
+  Stripe -->|signed webhook| App
+  App --> Vpic
 ```
 
 ## Services
 
 Preventive maintenance and oil changes, diagnostics, brakes, tires and alignment, battery / starter / alternator, suspension and steering, engine and transmission, HVAC, exhaust, pre-purchase inspection prep, and fleet maintenance.
 
-## Planned architecture
+## Architecture
 
-Launch is a modular monolith, not a set of microservices.
+Launch is a modular monolith, not a set of microservices. A missing secret leaves that feature quiet. The build still succeeds.
 
 | Layer | Choice |
 | --- | --- |
-| App | Next.js (App Router) and TypeScript |
+| App | Next.js (App Router) and TypeScript on Netlify |
 | UI | React, with accessible primitives |
-| Data | PostgreSQL via Prisma |
-| Cache and jobs | Redis and a queue (BullMQ or equivalent) |
-| Files | S3-compatible object storage |
-| Payments | Stripe or an equivalent provider; card data stays with the provider |
-| Email | A transactional provider (Resend, Postmark, SES, or similar) |
-| Auth | Auth.js (NextAuth), or Clerk / Auth0 |
-| Hosting | A Node host for the web app plus a worker process for background jobs |
+| Data | Neon Postgres via Prisma |
+| Cache and jobs | Redis and BullMQ. `npm run worker` is a separate process |
+| Files | S3-compatible object storage. The app stores metadata only |
+| Payments | Stripe Payment Element. Card data stays with Stripe |
+| Email | Resend. The request sends it when `REDIS_URL` is unset |
+| Auth | Auth.js credentials. The session cookie is `httpOnly` and `sameSite: lax` |
+| Vehicle catalog | NHTSA vPIC through `/api/vehicle-catalog` |
+
+`App --> Email` in the diagram above is that no-Redis fallback. Netlify does not run the worker.
 
 Public marketing pages use incremental static regeneration. Booking and estimate pages stay dynamic so availability is fresh. Customer and staff pages are private, uncached, and excluded from search indexes.
 
@@ -128,7 +157,7 @@ Multi-location UI, a fleet portal, SMS-first notifications, partial payments, fi
 | [README.md](README.md) | This overview |
 | `src/app/` | Public site, `/account`, `/admin`, and auth routes |
 | `src/modules/` | In-process domain modules |
-| [prisma/schema.prisma](prisma/schema.prisma) | Location-aware data model stubs |
+| [prisma/schema.prisma](prisma/schema.prisma) | Location-aware data model |
 
 ## Run the app
 
@@ -137,7 +166,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The public pages, customer portal, and staff workspace render without a database. Copy `.env.example` to `.env` and set `DATABASE_URL` before running Prisma migrations. Booking, estimates, and sign-in validate input and do not save it yet.
+Open [http://localhost:3000](http://localhost:3000). Public pages render from launch copy when `DATABASE_URL` is unset. Copy `.env.example` to `.env` for the pooled Neon URL, `AUTH_SECRET`, and the optional Redis, Resend, S3, and Stripe variables. Booking and estimate requests are saved when the database is set. Sign-in starts when `AUTH_SECRET` is set too.
 
 ```bash
 npm run typecheck
@@ -146,4 +175,4 @@ npm run lint
 
 ## Status
 
-The three surfaces and the Prisma model stubs are in place. Auth, payments, and persistence are not connected.
+The three surfaces render. Shop copy and the published catalog read from Neon. Guest booking and estimate requests are stored. Auth.js gates `/account` and `/admin` when `AUTH_SECRET` is set. Redis, Resend, S3, and Stripe run when their variables are set. Staff screens past the sign-in gate, repair timelines, and the audit log are still placeholders.
