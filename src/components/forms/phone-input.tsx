@@ -45,7 +45,7 @@ export function PhoneInput({
       autoComplete={autoComplete}
       aria-invalid={invalid ? true : undefined}
       aria-describedby={describedBy}
-      placeholder="+1 (555) 555-5555"
+      placeholder="555-555-5555"
       value={value}
       onChange={(event) => {
         setValue(formatUsPhoneInput(event.target.value, value));

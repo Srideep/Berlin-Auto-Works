@@ -34,7 +34,7 @@ export const bookingRequestSchema = z.object({
   contactPhone: z
     .string()
     .trim()
-    .refine(isCompleteUsPhone, "Enter a full phone number as +1 (xxx) xxx-xxxx."),
+    .refine(isCompleteUsPhone, "Enter a phone number as xxx-xxx-xxxx."),
   notes: z.string().trim().max(1000, "Keep notes under 1000 characters."),
   company: z.string().max(0),
 });
