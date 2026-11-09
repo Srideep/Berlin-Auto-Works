@@ -277,6 +277,25 @@ flowchart LR
 5. Confirmation email/SMS; optional prompt to create account to track repair.
 6. Staff sees appointment on `/admin/calendar` and `/admin/appointments`.
 
+```mermaid
+flowchart TD
+  land["Land on / or /services/slug"] --> cta[Book service]
+  cta --> book["/book: service, time window, vehicle, contact, optional notes and photos"]
+  book --> capacity["Check hours, blackouts, and slot limits"]
+  capacity --> noSlots["No slots in range: show next dates, or offer estimate-only or a call"]
+  capacity --> closed["Outside hours or holiday: block the slot and show hours and contact"]
+  capacity --> slots[Offer available slots]
+  slots --> duplicate["Same-day duplicate: warn, allow with a reason, or route to an advisor"]
+  slots --> confirm[User confirms]
+  confirm --> appointment["Create Appointment requested or confirmed, scoped to locationId"]
+  appointment --> uploadFail["Upload fails: keep the booking and mark attachments pending retry"]
+  appointment --> notify["Send confirmation email or SMS"]
+  notify --> notifyFail["Send fails: persist the appointment, queue a retry, staff still sees it"]
+  notify --> account[Optional prompt to create an account]
+  account --> claim["Guest later claims the booking by magic link or a matching phone and email"]
+  appointment --> staff["Staff sees it on /admin/calendar and /admin/appointments"]
+```
+
 **Key exceptions**
 
 | Exception | Behavior |
@@ -299,6 +318,22 @@ flowchart LR
 5. Customer **approves** → estimate locked; RO can be created; appointment may be scheduled/converted.
 6. Customer receives confirmation; staff calendar/RO queue updates.
 
+```mermaid
+flowchart TD
+  start["/estimate or /account/estimates"] --> describe["Describe the issue, vehicle, preferred contact, and optional photos"]
+  describe --> request["Create EstimateRequest and notify staff"]
+  request --> compose["Advisor adds labor, parts, taxes, and fees, status sent"]
+  compose --> review["Customer reviews totals and notes on /account/estimates/id or a magic link"]
+  review --> linkExpired["Magic link expired: force login or re-send the link, and do not show the estimate without proof"]
+  review --> declined["Customer declines, reason optional, status declined, advisor may revise as a new version"]
+  review --> changes["changes_requested: advisor edits and re-sends a new version, and history is kept"]
+  review --> expired["TTL elapsed: status expired, with a CTA to request a refresh"]
+  review --> approve[Customer approves and the estimate locks]
+  approve --> follow["A repair order can be created, and an appointment may be scheduled or converted"]
+  follow --> priceChange["A price change after approval requires re-approval before additional work"]
+  follow --> confirmation["Customer receives confirmation, and the staff calendar and repair queue update"]
+```
+
 **Key exceptions**
 
 | Exception | Behavior |
@@ -318,6 +353,22 @@ flowchart LR
 3. Customer views `/account/repairs/[id]`: customer-safe timeline, ETA if set, approved scope, select photos.
 4. Status changes and customer-visible notes trigger notifications (email/SMS per prefs).
 5. When `ready`, prompt pickup + invoice if balance due.
+
+The launch status chain is the state diagram in section 1.4.1. This flow does not draw a second one.
+
+```mermaid
+flowchart TD
+  create["Approved estimate or walk-in creates a RepairOrder linked to customer, vehicle, location, and an optional estimate"]
+  create --> status["Status follows the launch chain in section 1.4.1"]
+  status --> hold["Waiting on customer approval: on_hold, notify the customer, and block further billable work until a decision"]
+  status --> parts["Parts delay: waiting_parts, update the ETA, and notify"]
+  status --> cancel["Cancel requires a reason, and linked unfinished invoice lines are cancelled per policy"]
+  status --> view["Customer opens /account/repairs/id: customer-safe timeline, ETA if set, approved scope, and selected photos"]
+  view --> hidden["Internal notes are never shown in the customer portal"]
+  view --> photos["Customer sees photos with visibility=customer, staff sees all"]
+  view --> notify["Status changes and customer-visible notes send email or SMS per preferences"]
+  notify --> ready["When ready, prompt pickup and the invoice if a balance is due"]
+```
 
 **Key exceptions**
 
@@ -339,6 +390,20 @@ flowchart LR
 4. Webhook confirms payment → invoice `paid`; receipt email; RO can move to `delivered` if applicable.
 5. Staff sees payment on `/admin/invoices/[id]`.
 
+```mermaid
+flowchart TD
+  generate["From completed or approved work, staff generates an Invoice, or the repair order does when policy says so"]
+  generate --> openInvoice["Customer is notified and opens /account/invoices/id"]
+  openInvoice --> pay["Pay with hosted checkout or Payment Element, card data never touches application servers"]
+  pay --> fullOnly["Launch collects the full balance, partial payment is later"]
+  pay --> failed["Payment fails or is abandoned: invoice stays open, offer retry, and do not mark it paid"]
+  pay --> processing["Webhook is delayed: idempotent handler, UI shows processing until confirmed"]
+  pay --> paid["Webhook sets the invoice paid, sends a receipt, and the repair can move to delivered"]
+  paid --> refund["Manager refunds through the provider, the webhook syncs, and the audit log records it"]
+  paid --> dispute["Mark disputed, freeze related actions, and resolve it manually"]
+  paid --> staff["Staff sees the payment on /admin/invoices/id"]
+```
+
 **Key exceptions**
 
 | Exception | Behavior |
@@ -358,6 +423,17 @@ flowchart LR
 3. History aggregates completed ROs, invoices, past appointments per vehicle.
 4. Re-book from vehicle history with prefilled vehicle.
 
+```mermaid
+flowchart TD
+  auth["Sign up or log in"] --> account["Open /account"]
+  auth --> takeover["Rate-limit auth, apply lockout, and revoke sessions on password reset"]
+  auth --> invite["Staff-created customer with no password: invite email to set a password or use a magic link"]
+  account --> vehicle["Add a vehicle: VIN optional, year, make, model, and plate required"]
+  vehicle --> duplicate["Duplicate VIN or plate: soft-merge prompt"]
+  vehicle --> history["History aggregates completed repairs, invoices, and past appointments for that vehicle"]
+  history --> rebook["Re-book from that history with the vehicle prefilled"]
+```
+
 **Key exceptions**
 
 | Exception | Behavior |
@@ -374,6 +450,17 @@ flowchart LR
 2. Check in appointment → create/link RO → update status through day.
 3. Send estimate → monitor approvals → schedule work.
 4. Close RO → generate/send invoice → confirm payment/pickup.
+
+The happy path is the advisor-day sequence in section 1.4.1. The branches below are only the exceptions.
+
+```mermaid
+flowchart TD
+  day["Advisor day sequence in section 1.4.1"]
+  day --> noShow["No-show at check-in: mark the appointment no_show, a fee policy is later"]
+  day --> bay["Double-booked bay: calendar conflict warning, manager override with an audit entry"]
+  day --> forbidden["Unauthorized role: 403 page, and the API returns no record"]
+  day --> version["Concurrent estimate edit: optimistic locking on the version field, and show the conflict UI"]
+```
 
 **Key exceptions**
 
