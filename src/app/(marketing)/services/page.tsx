@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { cacheLife } from "next/cache";
 
-import { serviceOfferings } from "@/modules/catalog/services";
+import { listPublishedServices } from "@/modules/catalog/published";
 
 export const metadata: Metadata = {
   title: "Services",
@@ -13,6 +13,8 @@ export default async function ServicesPage() {
   "use cache";
   cacheLife("marketing");
 
+  const services = await listPublishedServices();
+
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
       <h1 className="text-4xl font-medium tracking-tight text-ink">Services</h1>
@@ -20,7 +22,7 @@ export default async function ServicesPage() {
         Every job starts with what we found and what it costs. Approve the estimate before we turn a wrench.
       </p>
       <ul className="mt-8 grid gap-4 sm:grid-cols-2">
-        {serviceOfferings.map((service) => (
+        {services.map((service) => (
           <li key={service.slug} className="rounded-2xl border border-line bg-card p-5">
             <h2 className="font-display text-2xl text-ink">{service.name}</h2>
             <p className="mt-2 text-base leading-7 text-muted">{service.summary}</p>

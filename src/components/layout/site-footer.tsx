@@ -1,9 +1,12 @@
 import Link from "next/link";
 
-import { formatShopAddress, launchShopProfile } from "@/modules/locations/profile";
+import { formatShopAddress, type ShopProfile } from "@/modules/locations/profile";
 
-export function SiteFooter() {
-  const shop = launchShopProfile;
+interface SiteFooterProps {
+  shop: ShopProfile;
+}
+
+export function SiteFooter({ shop }: SiteFooterProps) {
 
   return (
     <footer className="mt-auto border-t border-line bg-pine text-paper">

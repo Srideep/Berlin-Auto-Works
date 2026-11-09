@@ -1,17 +1,16 @@
 import Link from "next/link";
 import { cacheLife } from "next/cache";
 
-import { serviceOfferings } from "@/modules/catalog/services";
-import {
-  formatShopAddress,
-  launchShopProfile,
-} from "@/modules/locations/profile";
+import { listPublishedServices } from "@/modules/catalog/published";
+import { formatShopAddress } from "@/modules/locations/profile";
+import { getPublicShop } from "@/modules/locations/public-shop";
 
 export default async function HomePage() {
   "use cache";
   cacheLife("marketing");
 
-  const shop = launchShopProfile;
+  const shop = await getPublicShop();
+  const services = await listPublishedServices();
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "AutoRepair",
@@ -94,7 +93,7 @@ export default async function HomePage() {
           </Link>
         </div>
         <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {serviceOfferings.slice(0, 6).map((service) => (
+          {services.slice(0, 6).map((service) => (
             <li key={service.slug} className="rounded-2xl border border-line bg-card p-5">
               <h3 className="font-display text-xl text-ink">{service.name}</h3>
               <p className="mt-2 text-sm leading-6 text-muted">{service.summary}</p>

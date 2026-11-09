@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 
 import { PreviewForm } from "@/components/forms/preview-form";
-import { serviceOfferings } from "@/modules/catalog/services";
+import { listPublishedServices } from "@/modules/catalog/published";
 
 import { submitBookingRequest } from "./actions";
 
@@ -15,6 +15,7 @@ export const metadata: Metadata = {
 
 export default async function BookPage() {
   await connection();
+  const services = await listPublishedServices();
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
@@ -38,7 +39,7 @@ export default async function BookPage() {
                   label: "Service",
                   type: "select",
                   required: true,
-                  options: serviceOfferings.map((service) => ({
+                  options: services.map((service) => ({
                     value: service.slug,
                     label: service.name,
                   })),

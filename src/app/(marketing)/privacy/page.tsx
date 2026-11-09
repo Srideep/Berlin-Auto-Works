@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 
 import { LegalDocument } from "@/components/marketing/legal-document";
-import { launchShopProfile } from "@/modules/locations/profile";
+import { getPublicShop } from "@/modules/locations/public-shop";
 
 export const metadata: Metadata = {
   title: "Privacy",
@@ -13,10 +13,12 @@ export default async function PrivacyPage() {
   "use cache";
   cacheLife("legal");
 
+  const shop = await getPublicShop();
+
   return (
     <LegalDocument title="Privacy">
       <p>
-        This is a placeholder privacy notice for {launchShopProfile.brand}. It is
+        This is a placeholder privacy notice for {shop.brand}. It is
         not legal advice and it will be replaced before the shop collects real
         customer information.
       </p>
@@ -26,8 +28,7 @@ export default async function PrivacyPage() {
         payment provider.
       </p>
       <p>
-        Questions about personal information can go to {launchShopProfile.email}.
-        That address is a placeholder.
+        Questions about personal information can go to {shop.email}.
       </p>
     </LegalDocument>
   );

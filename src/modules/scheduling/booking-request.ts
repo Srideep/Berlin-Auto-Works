@@ -1,13 +1,7 @@
 import { z } from "zod";
 
-import { getService } from "@/modules/catalog/services";
-
 export const bookingRequestSchema = z.object({
-  serviceSlug: z
-    .string()
-    .trim()
-    .min(1, "Choose a service.")
-    .refine((slug) => getService(slug) !== undefined, "Choose a service we offer."),
+  serviceSlug: z.string().trim().min(1, "Choose a service."),
   preferredDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a date.")
@@ -30,3 +24,14 @@ export const bookingRequestSchema = z.object({
 });
 
 export type BookingRequest = z.infer<typeof bookingRequestSchema>;
+
+export function bookingRequestSchemaFor(serviceSlugs: readonly string[]) {
+  const offered = new Set(serviceSlugs);
+  return bookingRequestSchema.extend({
+    serviceSlug: z
+      .string()
+      .trim()
+      .min(1, "Choose a service.")
+      .refine((slug) => offered.has(slug), "Choose a service we offer."),
+  });
+}

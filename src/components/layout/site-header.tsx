@@ -7,12 +7,16 @@ const links = [
   { href: "/contact", label: "Contact" },
 ] as const;
 
-export function SiteHeader() {
+interface SiteHeaderProps {
+  brand: string;
+}
+
+export function SiteHeader({ brand }: SiteHeaderProps) {
   return (
     <header className="border-b border-line bg-paper/95">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
         <Link href="/" className="font-display text-2xl font-medium tracking-tight text-ink">
-          Berlin AutoWorks
+          {brand}
         </Link>
         <nav aria-label="Primary" className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-semibold">
           {links.map((link) => (

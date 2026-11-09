@@ -1,18 +1,8 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
-import {
-  serviceOfferings,
-  type ServiceSlug,
-} from "../src/modules/catalog/services";
+import { serviceOfferings } from "../src/modules/catalog/services";
 import { launchShopProfile } from "../src/modules/locations/profile";
-
-const sampleSlugs = [
-  "preventive-maintenance",
-  "diagnostics",
-  "brakes",
-  "tires-alignment",
-] as const satisfies readonly ServiceSlug[];
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -53,12 +43,7 @@ async function main(): Promise<void> {
     },
   });
 
-  for (const [sortOrder, slug] of sampleSlugs.entries()) {
-    const offering = serviceOfferings.find((service) => service.slug === slug);
-    if (!offering) {
-      throw new Error(`Catalog is missing sample service "${slug}".`);
-    }
-
+  for (const [sortOrder, offering] of serviceOfferings.entries()) {
     await prisma.service.upsert({
       where: {
         locationId_slug: {
