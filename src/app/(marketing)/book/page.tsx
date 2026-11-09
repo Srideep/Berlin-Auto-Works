@@ -55,28 +55,14 @@ export default async function BookPage() {
             },
             {
               title: "Vehicle",
-              description: "Year, make, and model are enough to start.",
+              description:
+                "Choose year, make, and model from the public vehicle catalog.",
               fields: [
                 {
-                  name: "vehicleYear",
-                  label: "Year",
-                  type: "number",
+                  name: "vehicleYmm",
+                  label: "Vehicle",
+                  type: "vehicleYmm",
                   required: true,
-                  autoComplete: "off",
-                },
-                {
-                  name: "vehicleMake",
-                  label: "Make",
-                  type: "text",
-                  required: true,
-                  autoComplete: "off",
-                },
-                {
-                  name: "vehicleModel",
-                  label: "Model",
-                  type: "text",
-                  required: true,
-                  autoComplete: "off",
                 },
               ],
             },
@@ -85,11 +71,24 @@ export default async function BookPage() {
               description: "We use this to confirm a time. It is not stored in this preview.",
               fields: [
                 {
-                  name: "contactName",
-                  label: "Name",
+                  name: "contactFirstName",
+                  label: "First name",
                   type: "text",
                   required: true,
-                  autoComplete: "name",
+                  autoComplete: "given-name",
+                },
+                {
+                  name: "contactMiddleName",
+                  label: "Middle name",
+                  type: "text",
+                  autoComplete: "additional-name",
+                },
+                {
+                  name: "contactLastName",
+                  label: "Last name",
+                  type: "text",
+                  required: true,
+                  autoComplete: "family-name",
                 },
                 {
                   name: "contactEmail",
@@ -101,7 +100,7 @@ export default async function BookPage() {
                 {
                   name: "contactPhone",
                   label: "Phone",
-                  type: "tel",
+                  type: "phone",
                   required: true,
                   autoComplete: "tel",
                 },

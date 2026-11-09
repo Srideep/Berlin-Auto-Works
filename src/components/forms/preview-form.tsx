@@ -2,6 +2,8 @@
 
 import { useActionState } from "react";
 
+import { PhoneInput } from "@/components/forms/phone-input";
+import { VehicleYmmFields } from "@/components/forms/vehicle-ymm-fields";
 import {
   initialActionState,
   type ActionState,
@@ -10,7 +12,17 @@ import {
 export interface FormField {
   name: string;
   label: string;
-  type: "text" | "email" | "tel" | "date" | "password" | "textarea" | "select" | "number";
+  type:
+    | "text"
+    | "email"
+    | "tel"
+    | "phone"
+    | "vehicleYmm"
+    | "date"
+    | "password"
+    | "textarea"
+    | "select"
+    | "number";
   autoComplete?: string;
   required?: boolean;
   options?: readonly { value: string; label: string }[];
@@ -74,11 +86,50 @@ export function PreviewForm({
               return (
                 <div
                   key={field.name}
-                  className={field.type === "textarea" ? "sm:col-span-2" : undefined}
+                  className={
+                    field.type === "textarea" || field.type === "vehicleYmm"
+                      ? "sm:col-span-2"
+                      : undefined
+                  }
                 >
-                  <label htmlFor={inputId} className="mb-1 block text-sm font-semibold text-ink">
-                    {field.label}
-                  </label>
+                  {field.type !== "vehicleYmm" ? (
+                    <label
+                      htmlFor={inputId}
+                      className="mb-1 block text-sm font-semibold text-ink"
+                    >
+                      {field.label}
+                      {field.required ? (
+                        <span className="text-danger" aria-hidden="true">
+                          {" "}
+                          *
+                        </span>
+                      ) : null}
+                    </label>
+                  ) : null}
+                  {field.type === "vehicleYmm" ? (
+                    <VehicleYmmFields
+                      yearId={`${inputId}-year`}
+                      makeId={`${inputId}-make`}
+                      modelId={`${inputId}-model`}
+                      fieldErrors={{
+                        vehicleYear: fieldErrors.vehicleYear,
+                        vehicleMake: fieldErrors.vehicleMake,
+                        vehicleModel: fieldErrors.vehicleModel,
+                      }}
+                      className={className}
+                    />
+                  ) : null}
+                  {field.type === "phone" ? (
+                    <PhoneInput
+                      id={inputId}
+                      name={field.name}
+                      required={field.required}
+                      invalid={error ? true : undefined}
+                      describedBy={describedBy}
+                      autoComplete={field.autoComplete}
+                      className={className}
+                    />
+                  ) : null}
                   {field.type === "textarea" ? (
                     <textarea
                       id={inputId}
@@ -110,7 +161,10 @@ export function PreviewForm({
                       ))}
                     </select>
                   ) : null}
-                  {field.type !== "textarea" && field.type !== "select" ? (
+                  {field.type !== "textarea" &&
+                  field.type !== "select" &&
+                  field.type !== "phone" &&
+                  field.type !== "vehicleYmm" ? (
                     <input
                       id={inputId}
                       name={field.name}
