@@ -1,7 +1,7 @@
 # Berlin AutoWorks — Systems Engineering Documentation
 
 This folder is the systems engineering baseline for the Berlin AutoWorks web
-application. [PLANNING.md](../../PLANNING.md) is the product plan; these
+application. [PLANNING.md](../PLANNING.md) is the product plan; these
 documents turn it into identified requirements, an allocated architecture,
 controlled interfaces, and a trace from each need to the code and test that
 satisfy it.
