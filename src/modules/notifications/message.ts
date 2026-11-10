@@ -16,6 +16,7 @@ const subjects: Record<NotificationTemplate, string> = {
   repair_status: "Your repair status changed",
   invoice_ready: "Your invoice is ready",
   password_reset: "Reset your Berlin AutoWorks password",
+  email_verification: "Confirm your Berlin AutoWorks email",
 };
 
 export function emailSubject(template: NotificationTemplate): string {

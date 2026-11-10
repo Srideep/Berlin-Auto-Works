@@ -1,5 +1,6 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
 
 import { getAuth, authConfigured } from "@/auth";
@@ -13,9 +14,13 @@ import {
 import {
   forgotPasswordSchema,
   loginSchema,
+  resendVerificationSchema,
   resetPasswordSchema,
   signupSchema,
+  verifyEmailSchema,
 } from "@/modules/identity/credentials";
+import { readSignedInUser } from "@/modules/identity/current-session";
+import { sendVerificationEmail, verifyEmailToken } from "@/modules/identity/verification";
 import { emailConfigured } from "@/modules/notifications/deliver";
 
 const notConfigured: ActionState = {
@@ -66,6 +71,15 @@ export async function submitSignup(
   const auth = getAuth();
   if (!authConfigured() || !auth) {
     return notConfigured;
+  }
+  // A new account cannot reach the portal until its email is verified, so
+  // production needs a way to send the link before accepting signups.
+  if (process.env.NODE_ENV === "production" && !emailConfigured()) {
+    return {
+      status: "unavailable",
+      message: "Account email is not configured, so new accounts cannot be confirmed yet.",
+      fieldErrors: {},
+    };
   }
   const created = await registerCustomer(parsed.data);
   if (!created.ok) {
@@ -139,6 +153,64 @@ export async function submitResetPassword(
   return {
     status: "success",
     message: "Password updated. Sign in with the new password.",
+    fieldErrors: {},
+  };
+}
+
+export async function submitVerifyEmail(
+  _state: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const parsed = await parseFormAction("verifyEmail", verifyEmailSchema, formData);
+  if (!parsed.ok) {
+    return parsed.state;
+  }
+  if (!authConfigured()) {
+    return notConfigured;
+  }
+  const verified = await verifyEmailToken(parsed.data.token);
+  if (!verified.ok) {
+    return {
+      status: "invalid",
+      message: verified.message,
+      fieldErrors: { token: verified.message },
+    };
+  }
+  // Outside any try block: redirect() throws to end the action. A visitor who
+  // is not signed in is sent on from /account to /login.
+  redirect("/account");
+}
+
+export async function submitResendVerification(
+  _state: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const parsed = await parseFormAction(
+    "resendVerification",
+    resendVerificationSchema,
+    formData,
+  );
+  if (!parsed.ok) {
+    return parsed.state;
+  }
+  if (!authConfigured()) {
+    return notConfigured;
+  }
+  const user = await readSignedInUser();
+  if (!user) {
+    return {
+      status: "invalid",
+      message: "Sign in to get a new confirmation link.",
+      fieldErrors: {},
+    };
+  }
+  if (user.emailVerified) {
+    redirect("/account");
+  }
+  await sendVerificationEmail(user.id);
+  return {
+    status: "success",
+    message: `A new confirmation link is on its way to ${user.email}. Earlier links no longer work.`,
     fieldErrors: {},
   };
 }

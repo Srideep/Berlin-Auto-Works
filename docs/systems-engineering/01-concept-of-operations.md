@@ -160,7 +160,7 @@ sequenceDiagram
 
 ### OS-06 — Customer manages account, vehicles, history (Flow E; SN-06)
 
-Sign up / log in → `/account` dashboard (upcoming appointments, open
+Sign up → confirm the email from the verification link (records made earlier under that email attach only then) → `/account` dashboard (upcoming appointments, open
 estimates, unpaid invoices) → vehicles list → vehicle detail with its
 appointments → re-book with vehicle prefilled (*re-book not yet implemented*).
 Password reset uses a single-use, one-hour, hashed token and revokes existing

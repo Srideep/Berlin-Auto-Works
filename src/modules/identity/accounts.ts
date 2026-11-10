@@ -3,6 +3,7 @@ import "server-only";
 import { getDb } from "@/lib/db";
 import { getSiteUrl } from "@/lib/site";
 import { createToken, hashPassword, hashToken } from "@/modules/identity/password";
+import { markEmailVerified, sendVerificationEmail } from "@/modules/identity/verification";
 import { enqueueEmail } from "@/modules/notifications/queue";
 import { emailConfigured } from "@/modules/notifications/deliver";
 
@@ -21,20 +22,18 @@ export async function registerCustomer(input: {
       message: "An account with that email already exists.",
     };
   }
-  const customer = await db.customer.upsert({
-    where: { email },
-    update: { name: input.name.trim() },
-    create: { email, name: input.name.trim() },
-    select: { id: true },
-  });
-  await db.user.create({
+  // The account is not linked to a Customer here, even when one exists with
+  // this email: a guest's bookings, estimates, and invoices stay hidden until
+  // the email is verified (see markEmailVerified).
+  const user = await db.user.create({
     data: {
       email,
       name: input.name.trim(),
       passwordHash: await hashPassword(input.password),
-      customerId: customer.id,
     },
+    select: { id: true },
   });
+  await sendVerificationEmail(user.id);
   return { ok: true };
 }
 
@@ -94,15 +93,16 @@ export async function resetPassword(input: {
   if (!record || record.expiresAt.getTime() < Date.now()) {
     return { ok: false, message: "That reset link is invalid or has expired." };
   }
-  await getDb().$transaction([
-    getDb().user.update({
+  const passwordHash = await hashPassword(input.password);
+  // The reset link was delivered to this email, so using it also proves
+  // control of the address.
+  await getDb().$transaction(async (tx) => {
+    await tx.user.update({
       where: { id: record.userId },
-      data: {
-        passwordHash: await hashPassword(input.password),
-        tokenVersion: { increment: 1 },
-      },
-    }),
-    getDb().passwordResetToken.deleteMany({ where: { userId: record.userId } }),
-  ]);
+      data: { passwordHash, tokenVersion: { increment: 1 } },
+    });
+    await tx.passwordResetToken.deleteMany({ where: { userId: record.userId } });
+    await markEmailVerified(tx, record.userId);
+  });
   return { ok: true };
 }

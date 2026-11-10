@@ -154,7 +154,7 @@ module. (Portal *read* pages currently call `getDb()` directly with a
 
 | ID | Module | Path | Responsibility | Owns (tables) | Status |
 | --- | --- | --- | --- | --- | --- |
-| M-IDN | identity | `src/modules/identity` | Credentials, password hashing, sessions, reset tokens, roles/capabilities, rate limits, `requireCustomer` / `requireStaff` | `User`, `PasswordResetToken`, `StaffMembership` (read) | Implemented core; RBAC per-route pending |
+| M-IDN | identity | `src/modules/identity` | Credentials, password hashing, sessions, reset and email verification tokens, roles/capabilities, rate limits, `requireCustomer` / `requireStaff` | `User`, `PasswordResetToken`, `EmailVerificationToken`, `StaffMembership` (read) | Implemented core; RBAC per-route pending |
 | M-LOC | locations | `src/modules/locations` | Active location, public shop profile, hours | `Location` | Implemented (hours in code) |
 | M-CAT | catalog | `src/modules/catalog` | Published services, fallback catalog | `Service` | Read path implemented; admin CRUD pending |
 | M-SCH | scheduling | `src/modules/scheduling` | Booking schema, save booking, visit display | `Appointment` | Request intake implemented; capacity pending |
@@ -253,6 +253,7 @@ erDiagram
   Appointment ||--o{ StoredFile : attaches
   Estimate ||--o{ StoredFile : attaches
   User ||--o{ PasswordResetToken : resets
+  User ||--o{ EmailVerificationToken : verifies
 ```
 
 `StripeEvent` stands alone (primary key = Stripe event id) as the webhook
@@ -266,7 +267,7 @@ key ([ADR-07](#adr-07--staff-access-by-email-matched-membership)).
 | Public | Service copy, shop NAP, hours | Cached at the edge |
 | Customer-confidential | Name, email, phone, vehicles, appointments, estimates, invoices, `customerSummary`, `visibility=customer` files | Only to the owning customer (by `customerId`) or staff at the location |
 | Staff-internal | `internalNotes`, `visibility=internal` files, audit events | Never selected by a portal query |
-| Secret | `passwordHash`, `tokenVersion`, reset `tokenHash`, `uploadTokenHash`, env secrets | Never rendered; hashes only |
+| Secret | `passwordHash`, `tokenVersion`, reset and verification `tokenHash`, `uploadTokenHash`, env secrets | Never rendered; hashes only |
 | Out of scope | Card PAN, CVC | Never present — held by Stripe |
 
 ### 6.3 Concurrency control
@@ -422,7 +423,7 @@ flowchart LR
 
 - **Status:** Accepted
 - **Decision:** One `User` table for staff and customers. Staff authority comes from a `StaffMembership` row with the same email (case-insensitive) at the active location.
-- **Consequences:** Staff can be provisioned before they sign up. Because emails are not yet verified (SR-IDN-007), anyone who can register a staff member's email before they do gains staff access. **Email verification is a precondition for enabling the staff workspace in production** (RSK-01).
+- **Consequences:** Staff can be provisioned before they sign up. Because the match is by email, `requireStaff()` honours a membership only after the user has verified that email (SR-IDN-007); without that check, anyone who registered a staff member's email first would gain staff access (RSK-01, mitigated).
 
 ### ADR-08 — JWT sessions with a revocation counter
 

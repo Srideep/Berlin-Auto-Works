@@ -34,3 +34,12 @@ export const resetPasswordSchema = z.object({
   password: passwordSchema,
   company: z.string().max(0),
 });
+
+export const verifyEmailSchema = z.object({
+  token: z.string().trim().min(1, "This confirmation link is incomplete.").max(256),
+  company: z.string().max(0),
+});
+
+export const resendVerificationSchema = z.object({
+  company: z.string().max(0),
+});

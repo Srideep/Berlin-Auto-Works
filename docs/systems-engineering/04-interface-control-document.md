@@ -121,6 +121,7 @@ Templates (subject defaults, `src/modules/notifications/message.ts`):
 | `booking_received` | We received your appointment request | SR-BOOK-008 | Implemented |
 | `estimate_received` | We received your estimate request | SR-EST-003 | Implemented |
 | `password_reset` | Reset your Berlin AutoWorks password | SR-IDN-005 | Implemented |
+| `email_verification` | Confirm your Berlin AutoWorks email | SR-IDN-007 | Implemented |
 | `estimate_sent` | Your estimate is ready | SR-EST-004 | Not started |
 | `repair_status` | Your repair status changed | SR-REP-007 | Not started |
 | `invoice_ready` | Your invoice is ready | SR-BIL-001 | Not started |
@@ -218,9 +219,11 @@ Zod → honeypot (`company` must be empty).
 | `submitBookingRequest` | `src/app/(marketing)/book/actions.ts` | `booking` | `bookingRequestSchemaFor(publishedSlugs)` | `saveBookingRequest` |
 | `submitEstimateRequest` | `src/app/(marketing)/estimate/actions.ts` | `estimate` | `estimateRequestSchema` | `saveEstimateRequest` |
 | `submitLogin` | `src/app/(auth)/actions.ts` | `login` | `loginSchema` | Auth.js `signIn` → `/account` |
-| `submitSignup` | same | `signup` | `signupSchema` | `registerCustomer`, then sign in |
+| `submitSignup` | same | `signup` | `signupSchema` | `registerCustomer` (no customer link; sends verification email), then sign in |
 | `submitForgotPassword` | same | `forgotPassword` | `forgotPasswordSchema` | `requestPasswordReset` (same response either way) |
 | `submitResetPassword` | same | `resetPassword` | `resetPasswordSchema` | `resetPassword` |
+| `submitVerifyEmail` | same | `verifyEmail` | `verifyEmailSchema` | `verifyEmailToken`, then redirect `/account` |
+| `submitResendVerification` | same | `resendVerification` | `resendVerificationSchema` | `sendVerificationEmail` for the signed-in, unverified user |
 | `signOutAction` | same | — | — | Auth.js `signOut` → `/` |
 
 Field contracts — booking (`bookingRequestSchema`):
@@ -241,7 +244,7 @@ Field contracts — booking (`bookingRequestSchema`):
 
 Estimate request replaces `serviceSlug`, `preferredDate`, `notes` with
 `concern` (10..2000). Credentials: `email` ≤ 120; `password` 12..200;
-`name` 1..80; reset `token` 1..256.
+`name` 1..80; reset and verification `token` 1..256.
 
 ---
 
@@ -276,7 +279,7 @@ release during a rolling deploy; add fields as optional only.
 Cookie: `baw_session`, `HttpOnly`, `SameSite=Lax`, `Path=/`, `Secure` in
 production.
 
-`readSignedInUser()` → `SignedInUser { id, email, name, customerId }`;
+`readSignedInUser()` → `SignedInUser { id, email, name, emailVerified, customerId }`;
 `requireCustomer()` adds non-null `customerId`; `requireStaff()` →
 `StaffContext { user, locationId, role }`.
 

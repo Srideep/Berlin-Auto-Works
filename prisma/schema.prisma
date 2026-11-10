@@ -274,12 +274,28 @@ model User {
   passwordHash String
   /// Incremented to revoke outstanding sessions, including after a password reset.
   tokenVersion Int       @default(0)
+  /// Set once the user proves control of the email. Until then the account is
+  /// not linked to a Customer and does not pass the portal or staff gates.
+  emailVerifiedAt DateTime?
   customerId   String?   @unique
   customer     Customer? @relation(fields: [customerId], references: [id], onDelete: Restrict)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  resetTokens PasswordResetToken[]
+  resetTokens        PasswordResetToken[]
+  verificationTokens EmailVerificationToken[]
+}
+
+/// Single-use email verification link. Only the SHA-256 of the token is stored.
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model PasswordResetToken {
