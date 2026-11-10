@@ -155,6 +155,7 @@ Multi-location UI, a fleet portal, SMS-first notifications, partial payments, fi
 | --- | --- |
 | [PLANNING.md](PLANNING.md) | Sitemap, flows, rendering, stack, and acceptance criteria |
 | [README.md](README.md) | This overview |
+| [docs/systems-engineering/](docs/systems-engineering/README.md) | ConOps, requirements (SRS), architecture, interfaces (ICD), traceability matrix, V&V plan, and risk register |
 | `src/app/` | Public site, `/account`, `/admin`, and auth routes |
 | `src/modules/` | In-process domain modules |
 | [prisma/schema.prisma](prisma/schema.prisma) | Location-aware data model |
