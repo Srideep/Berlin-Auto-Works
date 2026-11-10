@@ -11,6 +11,7 @@ export interface SignedInUser {
   id: string;
   email: string;
   name: string;
+  emailVerified: boolean;
   customerId: string | null;
 }
 
@@ -33,13 +34,20 @@ export async function readSignedInUser(): Promise<SignedInUser | null> {
       email: true,
       name: true,
       tokenVersion: true,
+      emailVerifiedAt: true,
       customerId: true,
     },
   });
   if (!user || user.tokenVersion !== session.user.tokenVersion) {
     return null;
   }
-  return user;
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    emailVerified: user.emailVerifiedAt !== null,
+    customerId: user.customerId,
+  };
 }
 
 export async function requireCustomer(): Promise<SignedInUser & { customerId: string } | null> {
@@ -47,7 +55,13 @@ export async function requireCustomer(): Promise<SignedInUser & { customerId: st
     return null;
   }
   const user = await readSignedInUser();
-  if (!user?.customerId) {
+  if (!user) {
+    redirect("/login");
+  }
+  if (!user.emailVerified) {
+    redirect("/verify-email");
+  }
+  if (!user.customerId) {
     redirect("/login");
   }
   return { ...user, customerId: user.customerId };
@@ -66,6 +80,11 @@ export async function requireStaff(): Promise<StaffContext | null> {
   const user = await readSignedInUser();
   if (!user) {
     redirect("/login");
+  }
+  // Staff access comes from a membership matched by email, so it is only
+  // honoured once the user has proved they control that email.
+  if (!user.emailVerified) {
+    redirect("/verify-email");
   }
   const location = await getActiveLocation();
   if (!location) {

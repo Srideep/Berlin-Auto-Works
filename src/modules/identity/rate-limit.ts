@@ -20,6 +20,8 @@ export const rateLimitPolicies = {
   signup: { limit: 5, windowMs: 60 * 60 * 1000 },
   forgotPassword: { limit: 5, windowMs: 60 * 60 * 1000 },
   resetPassword: { limit: 5, windowMs: 60 * 60 * 1000 },
+  verifyEmail: { limit: 10, windowMs: 60 * 60 * 1000 },
+  resendVerification: { limit: 5, windowMs: 60 * 60 * 1000 },
   booking: { limit: 8, windowMs: 60 * 60 * 1000 },
   estimate: { limit: 8, windowMs: 60 * 60 * 1000 },
   upload: { limit: 20, windowMs: 60 * 60 * 1000 },

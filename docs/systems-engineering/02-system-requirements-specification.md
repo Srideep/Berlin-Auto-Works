@@ -56,7 +56,7 @@ Resend, S3-compatible storage, Stripe, and NHTSA vPIC. See
 | SR-BOOK-009 | A signed-in customer shall see only their own appointments in the list and detail views. | SN-04, SN-10 | M | T | Implemented |
 | SR-BOOK-010 | A signed-in customer shall be able to book from the portal with a vehicle on file prefilled. | SN-06; Flow E | S | D | Not started — placeholder |
 | SR-BOOK-011 | A customer shall be able to cancel or request a reschedule of a `requested` or `confirmed` appointment. | SN-02 | S | T | Not started |
-| SR-BOOK-012 | A guest's records shall be attachable to a new account only after proof of control of the email (verification or magic link). | SN-10; Flow A exc. | M | T | Partial — records attach by email match on signup **without** verification (see RSK-01) |
+| SR-BOOK-012 | A guest's records shall be attachable to a new account only after proof of control of the email (verification or magic link). | SN-10; Flow A exc. | M | T | Implemented — linked only after a verification link or password reset (RSK-01 mitigated) |
 
 ### 3.3 Estimates — `EST`
 
@@ -125,11 +125,11 @@ Resend, S3-compatible storage, Stripe, and NHTSA vPIC. See
 | SR-IDN-004 | Every session read shall compare the token's `tokenVersion` with the user's current value and reject a mismatch. | SN-10 | M | T | Implemented |
 | SR-IDN-005 | Password reset tokens shall be random (256-bit), stored hashed, single-use, valid for one hour, and a successful reset shall revoke all sessions. | SN-10; Flow E exc. | M | T | Implemented |
 | SR-IDN-006 | The forgot-password response shall be identical whether or not the account exists. | SN-10 | M | T | Implemented |
-| SR-IDN-007 | Email ownership shall be verified before an account gains access to records created under that email. | SN-10 | M | T | Not started — `/verify-email` is a placeholder (RSK-01) |
-| SR-IDN-008 | Login, signup, forgot-password, reset-password, booking, estimate, and upload shall be rate limited per client (see NFR-SEC-008). | SN-10 | M | T | Implemented |
+| SR-IDN-007 | Email ownership shall be verified before an account gains access to records created under that email, or to staff access granted to that email. Verification links shall be random (256-bit), stored hashed, single-use, valid for 24 hours, and replaced when a new one is requested. | SN-10 | M | T | Implemented (`identity/verification.ts`) |
+| SR-IDN-008 | Login, signup, forgot-password, reset-password, email verification, booking, estimate, and upload shall be rate limited per client (see NFR-SEC-008). | SN-10 | M | T | Implemented |
 | SR-IDN-009 | Repeated failed logins for one account shall trigger a lockout or step-up. | SN-10; Flow E exc. | S | T | Not started — per-IP rate limit only |
-| SR-IDN-010 | `/account/**` shall require a signed-in user linked to a customer; otherwise redirect to `/login`. | SN-10 | M | T | Implemented |
-| SR-IDN-011 | `/admin/**` shall require a signed-in user with a `StaffMembership` at the active location; otherwise return 403. | SN-08 | M | T | Implemented |
+| SR-IDN-010 | `/account/**` shall require a signed-in user with a verified email linked to a customer; an unverified user shall be sent to `/verify-email`, anyone else to `/login`. | SN-10 | M | T | Implemented |
+| SR-IDN-011 | `/admin/**` shall require a signed-in user with a verified email and a `StaffMembership` at the active location; an unverified user shall be sent to `/verify-email`; otherwise return 403. | SN-08 | M | T | Implemented |
 | SR-IDN-012 | Each admin route and mutation shall check the role capability map (advisor, technician, manager) and return 403 with no record when missing. | SN-08 | M | T | Partial — capability map defined, not enforced per route (RSK-15) |
 | SR-IDN-013 | Staff shall be able to invite a customer who has no password to set one. | SN-07; Flow E exc. | S | T | Not started |
 
@@ -227,7 +227,7 @@ Resend, S3-compatible storage, Stripe, and NHTSA vPIC. See
 | NFR-SEC-005 | Every customer-portal query shall filter by the session's `customerId`; a request for another customer's record shall return 404. | SN-10 | M | T | Implemented |
 | NFR-SEC-006 | Every staff query and mutation shall filter by the staff member's `locationId`. | SN-08, SN-09 | M | T | Not started (no staff queries yet) |
 | NFR-SEC-007 | Card PAN and CVC shall never be stored, logged, or transmitted through application servers. | SN-10 | M | I | Implemented |
-| NFR-SEC-008 | Rate limits shall be: login 5/15 min; signup, forgot, reset 5/h; booking, estimate 8/h; upload 20/h; shared across instances when Redis is configured. | SN-10 | M | T | Implemented (client key trust — RSK-03) |
+| NFR-SEC-008 | Rate limits shall be: login 5/15 min; signup, forgot, reset, resend verification 5/h; verify email 10/h; booking, estimate 8/h; upload 20/h; shared across instances when Redis is configured. | SN-10 | M | T | Implemented (client key trust — RSK-03) |
 | NFR-SEC-009 | All external input shall be validated with Zod before use. | SN-10 | M | I | Implemented |
 | NFR-SEC-010 | Public forms shall include a honeypot field that silently rejects bots. | SN-10 | S | T | Implemented (`company`) |
 | NFR-SEC-011 | Mutations shall be protected against CSRF. | SN-10 | M | I | Implemented (Server Action origin check; Auth.js CSRF token) |
@@ -303,8 +303,8 @@ Resend, S3-compatible storage, Stripe, and NHTSA vPIC. See
 
 | Area | Total | Implemented | Partial | Not started / not verified | Deferred |
 | --- | --- | --- | --- | --- | --- |
-| Functional (`SR-`) | 101 | 49 | 12 | 36 | 4 |
+| Functional (`SR-`) | 101 | 51 | 11 | 35 | 4 |
 | Non-functional (`NFR-`) | 56 | 28 | 5 | 23 | 0 |
-| **All** | **157** | **77** | **17** | **59** | **4** |
+| **All** | **157** | **79** | **16** | **58** | **4** |
 
 Counts come from [05 RTM §1](05-requirements-traceability-matrix.md#1-status-summary), which also breaks them down by area. Recompute both when a status changes.

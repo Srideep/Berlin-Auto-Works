@@ -5,6 +5,7 @@ export const notificationTemplates = [
   "repair_status",
   "invoice_ready",
   "password_reset",
+  "email_verification",
 ] as const;
 
 export type NotificationTemplate = (typeof notificationTemplates)[number];

@@ -19,8 +19,8 @@
 | CI pipeline | None (`.github/workflows` absent); Netlify runs `npm run build` only |
 | Static checks | `npm run typecheck`, `npm run lint` exist; run manually |
 | Requirements verified by inspection | 22 (see RTM "Pass (inspection)") |
-| Requirements implemented but unverified | 55 ("Pending" in RTM) |
-| Requirements blocked on implementation | 76 ("Blocked" in RTM) |
+| Requirements implemented but unverified | 57 ("Pending" in RTM) |
+| Requirements blocked on implementation | 74 ("Blocked" in RTM) |
 
 Closing this gap is risk **RSK-05**. §6 gives the order of work.
 
@@ -72,7 +72,7 @@ the same pattern from the requirement text.
 | TC-BOOK-003 | SR-BOOK-003 | Unit | Table-driven schema test: year 1979/1980/current+1/current+2; name 0/40/41 chars; phone 9/10/11-with-1 digits; notes 1001 chars | Accept/reject exactly at the boundaries |
 | TC-BOOK-004 | SR-BOOK-004 | Integration | `saveBookingRequest` with valid input | Appointment `requested`, `locationId` = active location, linked customer and vehicle; second call reuses vehicle |
 | TC-BOOK-008 | SR-BOOK-008, NFR-REL-006 | Integration | (a) Redis set: job enqueued with template `booking_received`. (b) Mock `deliverEmail` to throw | (a) one job, attempts 5. (b) Booking still saved, action returns success |
-| TC-BOOK-012 | SR-BOOK-012, SR-IDN-007 | E2E | Guest books with `victim@example.test`; attacker signs up with the same email without verifying | Attacker's portal shows **no** appointment. *Fails today (RSK-01)* |
+| TC-BOOK-012 | SR-BOOK-012, SR-IDN-007 | E2E | Guest books with `victim@example.test`; attacker signs up with the same email without verifying | Attacker is sent to `/verify-email` and sees **no** appointment; after the owner confirms, the appointment appears. Passed in a local E2E run (fails on the pre-fix code) |
 | TC-EST-002 | SR-EST-002 | Integration | `saveEstimateRequest` valid | `Estimate` `draft`, `customerNotes` = concern, `locationId` set |
 | TC-PRIV-003 | NFR-PRIV-003 | Integration | Existing customer "Ana", phone X; guest submits booking with Ana's email, name "Mallory", phone Y | Ana's `Customer.name`/`phone` unchanged. *Fails today (RSK-02)* |
 
@@ -88,7 +88,7 @@ the same pattern from the requirement text.
 | TC-IDN-006 | SR-IDN-006 | E2E | Forgot password for existing and non-existing email | Identical message and status; timing within noise |
 | TC-IDN-008 | SR-IDN-008, NFR-SEC-008 | Integration | Six logins from one IP in 15 min (Redis on and off) | Sixth returns `limited` with retry seconds |
 | TC-IDN-010 | SR-IDN-010 | E2E | Anonymous `GET /account/invoices` | Redirect to `/login` |
-| TC-IDN-011 | SR-IDN-011 | E2E | Signed-in customer without membership opens `/admin` | 403 page; no staff data in HTML |
+| TC-IDN-011 | SR-IDN-011 | E2E | Signed-in customer without membership opens `/admin` | 403 page; no staff data in HTML. With an unverified email that matches a membership: redirect to `/verify-email` |
 | TC-IDN-012 | SR-IDN-012 | E2E | Technician opens `/admin/staff`, `/admin/audit`, `/admin/invoices` | 403 for each. *Fails today (RSK-15)* |
 
 ### 3.3 Billing
@@ -181,7 +181,7 @@ defects; RTM regenerated and committed.
 1. **Add CI** (GitHub Actions): `npm ci`, `typecheck`, `lint`, `build` with no secrets (TC-REL-007). Cheapest, protects everything after.
 2. **Add Vitest** with unit tests for schemas, phone, roles, password/tokens (TC-BOOK-003, TC-IDN-002).
 3. **Integration harness** with a Postgres service and seed; write TC-BIL-004..009 and TC-FIL-* first — money and uploads.
-4. **Write the failing tests for open risks** (TC-BOOK-012, TC-PRIV-003, TC-BIL-007b, TC-IDN-012), then fix RSK-01, RSK-02, RSK-08, RSK-15.
+4. **Write the failing tests for open risks** (TC-PRIV-003, TC-BIL-007b, TC-IDN-012), then fix RSK-02, RSK-08, RSK-15. Port the RSK-01 E2E run (TC-BOOK-012, TC-IDN-007) into the suite.
 5. **Playwright E2E** for SN-02 and SN-05 happy paths and the authz negatives.
 6. Lighthouse CI and axe once the staff screens stabilise.
 

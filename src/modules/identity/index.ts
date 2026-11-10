@@ -19,8 +19,10 @@ export type {
 export {
   forgotPasswordSchema,
   loginSchema,
+  resendVerificationSchema,
   resetPasswordSchema,
   signupSchema,
+  verifyEmailSchema,
 } from "@/modules/identity/credentials";
 
 export { sessionCookie } from "@/modules/identity/session";

@@ -19,21 +19,21 @@ Test case IDs mirror requirement IDs (`SR-BOOK-003` → `TC-BOOK-003`) so a miss
 
 | Type | Total | ✅ Implemented | 🟡 Partial | ⬜ Not started / not verified | ⏸ Deferred |
 | --- | --- | --- | --- | --- | --- |
-| Functional (`SR-`) | 101 | 49 | 12 | 36 | 4 |
+| Functional (`SR-`) | 101 | 51 | 11 | 35 | 4 |
 | Non-functional (`NFR-`) | 56 | 28 | 5 | 23 | 0 |
-| **All** | **157** | **77** | **17** | **59** | **4** |
+| **All** | **157** | **79** | **16** | **58** | **4** |
 
 ### 1.1 By area
 
 | Area | Total | ✅ | 🟡 | ⬜ | ⏸ | Must-haves not implemented |
 | --- | --- | --- | --- | --- | --- | --- |
 | Public site (`SR-PUB`) | 10 | 9 | 1 | 0 | 0 | — |
-| Scheduling and booking (`SR-BOOK`) | 12 | 6 | 1 | 5 | 0 | SR-BOOK-005, SR-BOOK-012 |
+| Scheduling and booking (`SR-BOOK`) | 12 | 7 | 0 | 5 | 0 | SR-BOOK-005 |
 | Estimates (`SR-EST`) | 11 | 4 | 3 | 4 | 0 | SR-EST-004, SR-EST-005, SR-EST-006, SR-EST-007, SR-EST-009, SR-EST-011 |
 | Repair orders (`SR-REP`) | 7 | 1 | 2 | 4 | 0 | SR-REP-001, SR-REP-002, SR-REP-004, SR-REP-006 |
 | Billing and payments (`SR-BIL`) | 13 | 7 | 1 | 4 | 1 | SR-BIL-001, SR-BIL-007 |
 | Customers and vehicles (`SR-CUS`) | 6 | 2 | 2 | 2 | 0 | SR-CUS-002 |
-| Identity and access (`SR-IDN`) | 13 | 9 | 1 | 3 | 0 | SR-IDN-007, SR-IDN-012 |
+| Identity and access (`SR-IDN`) | 13 | 10 | 1 | 2 | 0 | SR-IDN-012 |
 | Staff workspace (`SR-ADM`) | 9 | 0 | 0 | 9 | 0 | SR-ADM-001, SR-ADM-002, SR-ADM-004, SR-ADM-005, SR-ADM-006, SR-ADM-007, SR-ADM-008 |
 | Audit (`SR-AUD`) | 3 | 0 | 1 | 2 | 0 | SR-AUD-001, SR-AUD-002, SR-AUD-003 |
 | Files (`SR-FIL`) | 7 | 5 | 0 | 1 | 1 | — |
@@ -86,7 +86,7 @@ Columns: **Req** · **Need** · **Pri** · **Design** · **Implementation / evid
 | SR-BOOK-009 | SN-04, SN-10 | M | M-IDN, IF-15 | `src/app/account/bookings/page.tsx`, `[id]/page.tsx` | T | TC-BOOK-009 | ✅ Implemented | Pending |
 | SR-BOOK-010 | SN-06 | S | M-SCH, M-CUS | `src/app/account/bookings/new/page.tsx` (placeholder) | D | TC-BOOK-010 | ⬜ Not started | Blocked |
 | SR-BOOK-011 | SN-02 | S | M-SCH | — | T | TC-BOOK-011 | ⬜ Not started | Blocked |
-| SR-BOOK-012 | SN-10 | M | M-IDN, M-CUS | `identity/accounts.ts` `registerCustomer` (RSK-01) | T | TC-BOOK-012 | 🟡 Partial | Blocked |
+| SR-BOOK-012 | SN-10 | M | M-IDN, M-CUS | `registerCustomer`, `markEmailVerified` (RSK-01) | T | TC-BOOK-012 | ✅ Implemented | Pending |
 
 ### Estimates — `SR-EST`
 
@@ -155,7 +155,7 @@ Columns: **Req** · **Need** · **Pri** · **Design** · **Implementation / evid
 | SR-IDN-004 | SN-10 | M | M-IDN, ADR-08 | `readSignedInUser()` | T | TC-IDN-004 | ✅ Implemented | Pending |
 | SR-IDN-005 | SN-10 | M | M-IDN, M-NTF | `requestPasswordReset()`, `resetPassword()` | T | TC-IDN-005 | ✅ Implemented | Pending |
 | SR-IDN-006 | SN-10 | M | M-IDN | `submitForgotPassword` | T | TC-IDN-006 | ✅ Implemented | Pending |
-| SR-IDN-007 | SN-10 | M | M-IDN | `src/app/(auth)/verify-email/page.tsx` (placeholder) | T | TC-IDN-007 | ⬜ Not started | Blocked |
+| SR-IDN-007 | SN-10 | M | M-IDN, M-NTF, IF-06, IF-13 | `identity/verification.ts`, `src/app/(auth)/verify-email/page.tsx` (RSK-01) | T | TC-IDN-007 | ✅ Implemented | Pending |
 | SR-IDN-008 | SN-10 | M | M-IDN, IF-02 | `identity/rate-limit.ts`, `lib/form-action.ts` | T | TC-IDN-008 | ✅ Implemented | Pending |
 | SR-IDN-009 | SN-10 | S | M-IDN | — | T | TC-IDN-009 | ⬜ Not started | Blocked |
 | SR-IDN-010 | SN-10 | M | M-IDN | `requireCustomer()`, `account/layout.tsx` | T | TC-IDN-010 | ✅ Implemented | Pending |
@@ -338,7 +338,7 @@ Every stakeholder need must trace to at least one requirement. A need is **satis
 | SN-07 | 16 | 11 | 0 | 0% of Must |
 | SN-08 | 11 | 9 | 1 | 11% of Must |
 | SN-09 | 8 | 7 | 5 | 71% of Must |
-| SN-10 | 43 | 39 | 33 | 85% of Must |
+| SN-10 | 43 | 39 | 35 | 90% of Must |
 | SN-11 | 6 | 6 | 1 | 17% of Must |
 | SN-12 | 13 | 12 | 2 | 17% of Must |
 | SN-13 | 7 | 7 | 7 | Satisfied |
@@ -353,15 +353,15 @@ Reverse view: which requirements each module allocates. A module with only unimp
 
 | Module | Requirements allocated | ✅ | 🟡 | ⬜ |
 | --- | --- | --- | --- | --- |
-| M-IDN | SR-BOOK-009, SR-BOOK-012, SR-EST-010, SR-EST-011, SR-BIL-002, SR-CUS-001, SR-IDN-001, SR-IDN-002, SR-IDN-003, SR-IDN-004, SR-IDN-005, SR-IDN-006, SR-IDN-007, SR-IDN-008, SR-IDN-009, SR-IDN-010, SR-IDN-011, SR-IDN-012, SR-IDN-013, SR-ADM-008, NFR-SEC-005, NFR-SEC-006, NFR-SEC-008 | 15 | 2 | 6 |
+| M-IDN | SR-BOOK-009, SR-BOOK-012, SR-EST-010, SR-EST-011, SR-BIL-002, SR-CUS-001, SR-IDN-001, SR-IDN-002, SR-IDN-003, SR-IDN-004, SR-IDN-005, SR-IDN-006, SR-IDN-007, SR-IDN-008, SR-IDN-009, SR-IDN-010, SR-IDN-011, SR-IDN-012, SR-IDN-013, SR-ADM-008, NFR-SEC-005, NFR-SEC-006, NFR-SEC-008 | 17 | 1 | 5 |
 | M-LOC | SR-PUB-003, SR-PUB-005, SR-PUB-006, SR-BOOK-004, SR-BOOK-005, SR-EST-002, SR-ADM-007, SR-LOC-002, SR-LOC-003 | 5 | 1 | 3 |
 | M-CAT | SR-PUB-002, SR-PUB-003, SR-PUB-004, SR-BOOK-002, SR-ADM-006 | 4 | 0 | 1 |
 | M-SCH | SR-BOOK-001, SR-BOOK-002, SR-BOOK-003, SR-BOOK-004, SR-BOOK-005, SR-BOOK-006, SR-BOOK-007, SR-BOOK-010, SR-BOOK-011, SR-ADM-002, SR-ADM-003, SR-ADM-004, NFR-PERF-006, NFR-RND-005 | 4 | 0 | 10 |
 | M-EST | SR-EST-001, SR-EST-002, SR-EST-004, SR-EST-005, SR-EST-006, SR-EST-007, SR-EST-008, SR-EST-009, NFR-CMP-001 | 2 | 3 | 4 |
 | M-REP | SR-REP-001, SR-REP-002, SR-REP-003, SR-REP-004 | 0 | 1 | 3 |
 | M-BIL | SR-BIL-001, SR-BIL-002, SR-BIL-003, SR-BIL-004, SR-BIL-005, SR-BIL-006, SR-BIL-007, SR-BIL-008, SR-BIL-009, SR-BIL-010, SR-BIL-011, SR-BIL-012, NFR-CMP-001 | 7 | 1 | 5 |
-| M-CUS | SR-BOOK-010, SR-BOOK-012, SR-CUS-001, SR-CUS-002, SR-CUS-003, SR-CUS-004, SR-CUS-006, SR-ADM-005, SR-NTF-005, NFR-PRIV-003 | 1 | 3 | 6 |
-| M-NTF | SR-BOOK-008, SR-EST-003, SR-REP-007, SR-BIL-012, SR-IDN-005, SR-IDN-013, SR-NTF-001, SR-NTF-002, SR-NTF-004, SR-NTF-005 | 6 | 0 | 4 |
+| M-CUS | SR-BOOK-010, SR-BOOK-012, SR-CUS-001, SR-CUS-002, SR-CUS-003, SR-CUS-004, SR-CUS-006, SR-ADM-005, SR-NTF-005, NFR-PRIV-003 | 2 | 2 | 6 |
+| M-NTF | SR-BOOK-008, SR-EST-003, SR-REP-007, SR-BIL-012, SR-IDN-005, SR-IDN-007, SR-IDN-013, SR-NTF-001, SR-NTF-002, SR-NTF-004, SR-NTF-005 | 7 | 0 | 4 |
 | M-AUD | SR-BIL-010, SR-ADM-003, SR-AUD-001, SR-AUD-002, SR-AUD-003 | 0 | 1 | 4 |
 | M-FIL | SR-REP-006, SR-FIL-001, SR-FIL-002, SR-FIL-003, SR-FIL-004, SR-FIL-005, SR-FIL-006, SR-FIL-007 | 5 | 1 | 1 |
 
@@ -374,14 +374,14 @@ Reverse view: which requirements each module allocates. A module with only unimp
 | IF-03 | SR-BIL-003, SR-BIL-005 |
 | IF-04 | SR-BIL-006, SR-BIL-007, SR-BIL-008 |
 | IF-05 | SR-BIL-003, NFR-PERF-008, NFR-SEC-007 |
-| IF-06 | SR-BOOK-008, SR-EST-003, SR-NTF-004 |
+| IF-06 | SR-BOOK-008, SR-EST-003, SR-IDN-007, SR-NTF-004 |
 | IF-07 | SR-FIL-001, SR-FIL-004 |
 | IF-08 | SR-FIL-001 |
 | IF-09 | SR-CUS-005 |
 | IF-10 | SR-IDN-003, NFR-SEC-011 |
 | IF-11 | SR-FIL-001, SR-FIL-002, NFR-SEC-009 |
 | IF-12 | SR-CUS-005, NFR-SEC-009 |
-| IF-13 | SR-BOOK-001, SR-BOOK-003, SR-EST-001, SR-IDN-001, NFR-SEC-009, NFR-SEC-010, NFR-SEC-011 |
+| IF-13 | SR-BOOK-001, SR-BOOK-003, SR-EST-001, SR-IDN-001, SR-IDN-007, NFR-SEC-009, NFR-SEC-010, NFR-SEC-011 |
 | IF-14 | SR-BOOK-008, SR-NTF-001, SR-NTF-003 |
 | IF-15 | SR-BOOK-009, SR-IDN-003 |
 | IF-16 | SR-AUD-001 |
