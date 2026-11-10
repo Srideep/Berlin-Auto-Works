@@ -6,7 +6,7 @@ Berlin AutoWorks is a fictional full-service auto repair shop in Berlin, New Jer
 
 The launch shop is a single location. Every transactional record carries a location id, so more shops can be added later without rewriting the data model.
 
-The app scaffold lives in this repository. The full specification — sitemap, user flows, rendering strategy, stack, and non-functional requirements — is in [PLANNING.md](PLANNING.md).
+The app scaffold lives in this repository. The full specification — sitemap, user flows, rendering strategy, stack, and non-functional requirements — is in [PLANNING.md](docs/PLANNING.md).
 
 ## Placeholder shop details
 
@@ -44,7 +44,7 @@ Three surfaces share one codebase and one API boundary.
 
 **Staff workspace:** operations dashboard, calendar, appointments, customers, estimates, repair orders, invoices, service catalog, hours, staff, settings, and an audit log. Launch roles are service advisor, technician, and manager/owner.
 
-The route map follows that nav. Every `/admin` route is dynamic, sent with `Cache-Control: private, no-store`, and marked noindex. Auth.js already requires a session, and `/admin` also requires a `StaffMembership` for that email. Role access, the advisor’s day, and repair statuses are in [PLANNING.md](PLANNING.md) section 1.4.1. Staff list pages past that gate do not load or change shop records yet.
+The route map follows that nav. Every `/admin` route is dynamic, sent with `Cache-Control: private, no-store`, and marked noindex. Auth.js already requires a session, and `/admin` also requires a `StaffMembership` for that email. Role access, the advisor’s day, and repair statuses are in [PLANNING.md](docs/PLANNING.md) section 1.4.1. Staff list pages past that gate do not load or change shop records yet.
 
 ```mermaid
 flowchart TB
@@ -153,7 +153,7 @@ Multi-location UI, a fleet portal, SMS-first notifications, partial payments, fi
 
 | Path | Purpose |
 | --- | --- |
-| [PLANNING.md](PLANNING.md) | Sitemap, flows, rendering, stack, and acceptance criteria |
+| [docs/PLANNING.md](docs/PLANNING.md) | Sitemap, flows, rendering, stack, and acceptance criteria |
 | [README.md](README.md) | This overview |
 | [docs/systems-engineering/](docs/systems-engineering/README.md) | ConOps, requirements (SRS), architecture, interfaces (ICD), traceability matrix, V&V plan, and risk register |
 | `src/app/` | Public site, `/account`, `/admin`, and auth routes |

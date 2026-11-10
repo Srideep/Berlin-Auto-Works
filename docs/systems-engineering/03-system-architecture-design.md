@@ -224,7 +224,7 @@ Observations:
 | Staff workspace | `/admin/**` | `requireStaff()` → redirect `/login` or `forbidden()` | Dynamic (`connection()`) | + `private, no-store`, noindex |
 | API | `/api/**` | Per handler | Dynamic | Security headers |
 
-Full route list: [PLANNING.md §1.2–1.4](../../PLANNING.md#1-sitemap-and-user-flows).
+Full route list: [PLANNING.md §1.2–1.4](../PLANNING.md#1-sitemap-and-user-flows).
 
 ## 6. Data architecture
 
